@@ -80,13 +80,16 @@ func display_exits() -> void:
 There are three ways to load a graph:
 
 #### A. Static Graph (Read-Only)
+
 ```gdscript
 # Load a graph for read-only navigation
 runtime.load_graph("res://maps/my_map.tres")
 ```
+
 Use when you don't need to modify edges at runtime (e.g., simple navigation, pathfinding).
 
 #### B. Instanced Graph (Modifiable)
+
 ```gdscript
 # Load an instance that can be modified at runtime
 runtime.load_graph_instanced("res://maps/my_map.tres")
@@ -94,9 +97,11 @@ runtime.load_graph_instanced("res://maps/my_map.tres")
 # Now you can lock/unlock edges without affecting the original resource
 runtime.lock_edge("room_a", "room_b")
 ```
+
 Use when you need to lock/unlock/hide edges during gameplay (e.g., locked doors, collapsed passages).
 
 #### C. From Existing Resource
+
 ```gdscript
 # Load from an already-loaded resource
 var graph: LocationGraph = preload("res://maps/my_map.tres")
@@ -162,12 +167,15 @@ var in_label := runtime.get_in_port_label("room_a", 0)    # First incoming conne
 ### Loading and Initialization
 
 #### `load_graph(path: String) -> void`
+
 Loads a LocationGraph resource from the given file path. Use for read-only access.
 
 **Parameters:**
+
 - `path`: Resource path to the `.tres` file (e.g., `"res://maps/level1.tres"`)
 
 **Example:**
+
 ```gdscript
 runtime.load_graph("res://maps/dungeon.tres")
 ```
@@ -175,12 +183,15 @@ runtime.load_graph("res://maps/dungeon.tres")
 ---
 
 #### `load_graph_instanced(path: String) -> void`
+
 Loads and creates an instance of the LocationGraph for runtime modification. Changes won't affect the original resource.
 
 **Parameters:**
+
 - `path`: Resource path to the `.tres` file
 
 **Example:**
+
 ```gdscript
 runtime.load_graph_instanced("res://maps/dungeon.tres")
 runtime.lock_edge("entrance", "treasury")  # Safe to modify
@@ -189,12 +200,15 @@ runtime.lock_edge("entrance", "treasury")  # Safe to modify
 ---
 
 #### `set_graph(graph_resource: LocationGraph) -> void`
+
 Sets the active graph from an already loaded LocationGraph resource.
 
 **Parameters:**
+
 - `graph_resource`: A LocationGraph instance
 
 **Example:**
+
 ```gdscript
 var graph := preload("res://maps/level1.tres")
 runtime.set_graph(graph)
@@ -205,9 +219,11 @@ runtime.set_graph(graph)
 ### Navigation and Queries
 
 #### `get_start_id() -> String`
+
 Returns the ID of the designated start location. Returns empty string if not set.
 
 **Example:**
+
 ```gdscript
 var start := runtime.get_start_id()
 if start != "":
@@ -217,9 +233,11 @@ if start != "":
 ---
 
 #### `get_start_or_first_id() -> String`
+
 Returns the start node ID if set, otherwise returns the first node's ID. Convenience method for initialization.
 
 **Example:**
+
 ```gdscript
 # Always get a valid starting location
 current_location = runtime.get_start_or_first_id()
@@ -228,15 +246,19 @@ current_location = runtime.get_start_or_first_id()
 ---
 
 #### `get_location_node(id: String) -> LocationNodeData`
+
 Retrieves the LocationNodeData for a given location ID. Returns `null` if not found.
 
 **Parameters:**
+
 - `id`: The location ID (e.g., `"room_01"`, `"forest_clearing"`)
 
 **Returns:**
+
 - `LocationNodeData` object or `null`
 
 **Example:**
+
 ```gdscript
 var node := runtime.get_location_node("treasure_room")
 if node:
@@ -247,15 +269,19 @@ if node:
 ---
 
 #### `get_location_name(id: String) -> String`
+
 Gets the title/name of a location. Returns "Unknown" if not found.
 
 **Parameters:**
+
 - `id`: The location ID
 
 **Returns:**
+
 - The node's title or "Unknown"
 
 **Example:**
+
 ```gdscript
 var name := runtime.get_location_name("entrance")
 print("You are at: %s" % name)
@@ -264,15 +290,19 @@ print("You are at: %s" % name)
 ---
 
 #### `get_neighbors(id: String) -> Array[String]`
+
 Returns an array of accessible neighboring location IDs. Only includes unlocked and visible connections.
 
 **Parameters:**
+
 - `id`: The location ID
 
 **Returns:**
+
 - Array of neighbor IDs (String)
 
 **Example:**
+
 ```gdscript
 var neighbors := runtime.get_neighbors("courtyard")
 for neighbor_id in neighbors:
@@ -282,15 +312,19 @@ for neighbor_id in neighbors:
 ---
 
 #### `get_all_neighbors(id: String) -> Array[String]`
+
 Returns all neighboring location IDs, including locked and hidden connections.
 
 **Parameters:**
+
 - `id`: The location ID
 
 **Returns:**
+
 - Array of all neighbor IDs (String), including inaccessible ones
 
 **Example:**
+
 ```gdscript
 # Show locked doors as "locked" options in UI
 var all_neighbors := runtime.get_all_neighbors("hallway")
@@ -302,16 +336,20 @@ for neighbor_id in all_neighbors:
 ---
 
 #### `has_edge(from_id: String, to_id: String) -> bool`
+
 Checks if a direct accessible connection exists between two locations.
 
 **Parameters:**
+
 - `from_id`: Source location ID
 - `to_id`: Destination location ID
 
 **Returns:**
+
 - `true` if accessible connection exists, `false` otherwise
 
 **Example:**
+
 ```gdscript
 if runtime.has_edge("entrance", "lobby"):
     print("You can go directly to the lobby")
@@ -322,15 +360,19 @@ if runtime.has_edge("entrance", "lobby"):
 ### Edge Management
 
 #### `get_edges_from(from_id: String) -> Array`
+
 Returns an array of LocationEdgeData objects that originate from the given node.
 
 **Parameters:**
+
 - `from_id`: The source location ID
 
 **Returns:**
+
 - Array of `LocationEdgeData` objects
 
 **Example:**
+
 ```gdscript
 for edge in runtime.get_edges_from("central_room"):
     print("Connection to: %s" % edge.to_id)
@@ -341,15 +383,19 @@ for edge in runtime.get_edges_from("central_room"):
 ---
 
 #### `get_edges_to(to_id: String) -> Array`
+
 Returns an array of LocationEdgeData objects that target the given node.
 
 **Parameters:**
+
 - `to_id`: The destination location ID
 
 **Returns:**
+
 - Array of `LocationEdgeData` objects
 
 **Example:**
+
 ```gdscript
 # Find all locations that connect TO the throne room
 for edge in runtime.get_edges_to("throne_room"):
@@ -359,16 +405,20 @@ for edge in runtime.get_edges_to("throne_room"):
 ---
 
 #### `get_edge_between(from_id: String, to_id: String) -> LocationEdgeData`
+
 Gets the edge between two nodes, excluding locked and hidden edges.
 
 **Parameters:**
+
 - `from_id`: Source location ID
 - `to_id`: Destination location ID
 
 **Returns:**
+
 - `LocationEdgeData` object or `null` if no accessible edge exists
 
 **Example:**
+
 ```gdscript
 var edge := runtime.get_edge_between("hall", "kitchen")
 if edge:
@@ -379,16 +429,20 @@ if edge:
 ---
 
 #### `get_edge_between_including_locked(from_id: String, to_id: String) -> LocationEdgeData`
+
 Gets the edge between two nodes, including locked and hidden edges.
 
 **Parameters:**
+
 - `from_id`: Source location ID
 - `to_id`: Destination location ID
 
 **Returns:**
+
 - `LocationEdgeData` object or `null`
 
 **Example:**
+
 ```gdscript
 var edge := runtime.get_edge_between_including_locked("gate", "castle")
 if edge and edge.locked:
@@ -398,16 +452,20 @@ if edge and edge.locked:
 ---
 
 #### `is_edge_locked(from_id: String, to_id: String) -> bool`
+
 Checks if an edge between two nodes is locked.
 
 **Parameters:**
+
 - `from_id`: Source location ID
 - `to_id`: Destination location ID
 
 **Returns:**
+
 - `true` if edge exists and is locked, `false` otherwise
 
 **Example:**
+
 ```gdscript
 if runtime.is_edge_locked("entrance", "vault"):
     print("You need a key to unlock the vault door")
@@ -416,16 +474,20 @@ if runtime.is_edge_locked("entrance", "vault"):
 ---
 
 #### `is_edge_hidden(from_id: String, to_id: String) -> bool`
+
 Checks if an edge between two nodes is hidden.
 
 **Parameters:**
+
 - `from_id`: Source location ID
 - `to_id`: Destination location ID
 
 **Returns:**
+
 - `true` if edge exists and is hidden, `false` otherwise
 
 **Example:**
+
 ```gdscript
 if runtime.is_edge_hidden("library", "secret_room"):
     print("There's a secret passage here!")
@@ -435,16 +497,20 @@ if runtime.is_edge_hidden("library", "secret_room"):
 ---
 
 #### `lock_edge(from_id: String, to_id: String) -> bool`
+
 Locks an edge, preventing travel along that route. **Requires an instanced graph.**
 
 **Parameters:**
+
 - `from_id`: Source location ID
 - `to_id`: Destination location ID
 
 **Returns:**
+
 - `true` if successful, `false` if edge not found
 
 **Example:**
+
 ```gdscript
 # Player triggers a trap that collapses the passage
 if runtime.lock_edge("cavern", "underground_lake"):
@@ -454,16 +520,20 @@ if runtime.lock_edge("cavern", "underground_lake"):
 ---
 
 #### `unlock_edge(from_id: String, to_id: String) -> bool`
+
 Unlocks an edge, allowing travel along that route. **Requires an instanced graph.**
 
 **Parameters:**
+
 - `from_id`: Source location ID
 - `to_id`: Destination location ID
 
 **Returns:**
+
 - `true` if successful, `false` if edge not found
 
 **Example:**
+
 ```gdscript
 # Player uses a key to unlock a door
 if player_has_key and runtime.unlock_edge("hallway", "treasure_room"):
@@ -474,16 +544,20 @@ if player_has_key and runtime.unlock_edge("hallway", "treasure_room"):
 ---
 
 #### `hide_edge(from_id: String, to_id: String) -> bool`
+
 Marks an edge as hidden. Hidden edges are excluded from normal navigation and pathfinding. **Requires an instanced graph.**
 
 **Parameters:**
+
 - `from_id`: Source location ID
 - `to_id`: Destination location ID
 
 **Returns:**
+
 - `true` if successful, `false` if edge not found
 
 **Example:**
+
 ```gdscript
 # Conceal a secret passage until player discovers it
 runtime.hide_edge("study", "secret_library")
@@ -492,16 +566,20 @@ runtime.hide_edge("study", "secret_library")
 ---
 
 #### `unhide_edge(from_id: String, to_id: String) -> bool`
+
 Reveals a hidden edge. **Requires an instanced graph.**
 
 **Parameters:**
+
 - `from_id`: Source location ID
 - `to_id`: Destination location ID
 
 **Returns:**
+
 - `true` if successful, `false` if edge not found
 
 **Example:**
+
 ```gdscript
 # Player discovers a hidden passage
 if player_examined_bookshelf:
@@ -514,18 +592,22 @@ if player_examined_bookshelf:
 ### Port Labels
 
 #### `get_port_label_between(node_id: String, neighbor_id: String, include_locked: bool = false, include_hidden: bool = false) -> String`
+
 Gets the port label that describes the connection between two locations.
 
 **Parameters:**
+
 - `node_id`: Current location ID
 - `neighbor_id`: Connected location ID
 - `include_locked`: Whether to return labels for locked connections (default: `false`)
 - `include_hidden`: Whether to return labels for hidden connections (default: `false`)
 
 **Returns:**
+
 - Port label string or empty string if not found/not accessible
 
 **Example:**
+
 ```gdscript
 var label := runtime.get_port_label_between("entrance", "courtyard")
 print("Exit: %s" % label)  # "Main Gate", "North Door", etc.
@@ -539,16 +621,20 @@ if locked_label != "":
 ---
 
 #### `get_out_port_label(node_id: String, port_index: int) -> String`
+
 Gets the outgoing port label by index.
 
 **Parameters:**
+
 - `node_id`: Location ID
 - `port_index`: Port index (0-based)
 
 **Returns:**
+
 - Port label string or empty string
 
 **Example:**
+
 ```gdscript
 var node := runtime.get_location_node("crossroads")
 for i in range(node.out_port_labels.size()):
@@ -559,16 +645,20 @@ for i in range(node.out_port_labels.size()):
 ---
 
 #### `get_in_port_label(node_id: String, port_index: int) -> String`
+
 Gets the incoming port label by index.
 
 **Parameters:**
+
 - `node_id`: Location ID
 - `port_index`: Port index (0-based)
 
 **Returns:**
+
 - Port label string or empty string
 
 **Example:**
+
 ```gdscript
 var label := runtime.get_in_port_label("throne_room", 0)
 print("Entered through: %s" % label)
@@ -579,16 +669,20 @@ print("Entered through: %s" % label)
 ### Pathfinding
 
 #### `find_path_bfs(start_id: String, goal_id: String) -> Array[String]`
+
 Finds the shortest path between two locations using Breadth-First Search. Only considers accessible (unlocked, visible) edges.
 
 **Parameters:**
+
 - `start_id`: Starting location ID
 - `goal_id`: Destination location ID
 
 **Returns:**
+
 - Array of location IDs representing the path, or empty array if no path found
 
 **Example:**
+
 ```gdscript
 # Find path from player's location to quest objective
 var path := runtime.find_path_bfs(current_location, "quest_location")
@@ -1113,6 +1207,7 @@ The runtime uses indexed lookups for fast performance:
 - `find_path_bfs()`: O(V + E) where V=nodes, E=edges
 
 **Tips:**
+
 - Avoid calling `load_graph()` repeatedly
 - Cache neighbor lists if checking multiple times per frame
 - Use `has_edge()` for simple connectivity checks before pathfinding
@@ -1187,6 +1282,7 @@ var edges_to: Dictionary = {
 ```
 
 This means:
+
 - Looking up neighbors: **O(1)** on average
 - Looking up node data: **O(1)** on average
 - Finding edges from/to a node: **O(1)** on average
@@ -1196,6 +1292,7 @@ This means:
 ### BFS Pathfinding Complexity
 
 The `find_path_bfs()` function has:
+
 - **Time complexity**: O(V + E) where V = number of nodes, E = number of edges
 - **Space complexity**: O(V) for the queue and came_from dictionary
 
@@ -1206,6 +1303,7 @@ For typical game graphs (< 1000 nodes), performance is excellent.
 ### When to Rebuild Indices
 
 Indices are automatically rebuilt when:
+
 - `load_graph()` is called
 - `load_graph_instanced()` is called
 - `set_graph()` is called
@@ -1222,6 +1320,7 @@ Indices are automatically rebuilt when:
 - **Runtime dictionaries**: O(N) where N = number of nodes + edges
 
 For large graphs (1000+ nodes), consider:
+
 - Breaking into smaller sub-graphs
 - Lazy loading (load regions as needed)
 - Using static graphs when possible
