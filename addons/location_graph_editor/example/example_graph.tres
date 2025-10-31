@@ -1,0 +1,168 @@
+[gd_resource type="Resource" script_class="LocationGraph" load_steps=24 format=3 uid="uid://dibe3y7tv834f"]
+
+[ext_resource type="Script" uid="uid://cq3njx1yv4hmw" path="res://addons/location_graph_editor/resources/location_edge.gd" id="1_hawok"]
+[ext_resource type="Script" uid="uid://dc3tv4abtdhe7" path="res://addons/location_graph_editor/resources/location_node.gd" id="2_rkvbm"]
+[ext_resource type="Script" uid="uid://doaboqc1qyabj" path="res://addons/location_graph_editor/resources/location_graph.gd" id="3_ciuy3"]
+
+[sub_resource type="Resource" id="Resource_hawok"]
+script = ExtResource("1_hawok")
+from_id = &"village_square"
+to_id = &"village_well"
+bidirectional = true
+
+[sub_resource type="Resource" id="Resource_rkvbm"]
+script = ExtResource("1_hawok")
+from_id = &"village_well"
+to_id = &"village_well_bottom"
+
+[sub_resource type="Resource" id="Resource_ciuy3"]
+script = ExtResource("1_hawok")
+from_id = &"village_well_bottom"
+to_id = &"village_sewer"
+bidirectional = true
+
+[sub_resource type="Resource" id="Resource_y4xal"]
+script = ExtResource("1_hawok")
+from_id = &"village_square"
+to_id = &"village_tavern"
+from_port = 1
+bidirectional = true
+
+[sub_resource type="Resource" id="Resource_67hcq"]
+script = ExtResource("1_hawok")
+from_id = &"village_tavern"
+to_id = &"village_tavern_cellar"
+bidirectional = true
+locked = true
+
+[sub_resource type="Resource" id="Resource_ewtm6"]
+script = ExtResource("1_hawok")
+from_id = &"village_square"
+to_id = &"village_dock"
+from_port = 2
+bidirectional = true
+
+[sub_resource type="Resource" id="Resource_snysd"]
+script = ExtResource("1_hawok")
+from_id = &"village_dock"
+to_id = &"village_river"
+to_port = 1
+bidirectional = true
+
+[sub_resource type="Resource" id="Resource_yfp56"]
+script = ExtResource("1_hawok")
+from_id = &"village_tavern_cellar"
+to_id = &"tavern_cellar_secret_room"
+bidirectional = true
+locked = true
+hidden = true
+
+[sub_resource type="Resource" id="Resource_0yg8a"]
+script = ExtResource("1_hawok")
+from_id = &"village_sewer"
+to_id = &"village_river"
+from_port = 1
+bidirectional = true
+
+[sub_resource type="Resource" id="Resource_51ntd"]
+script = ExtResource("1_hawok")
+from_id = &"village_sewer"
+to_id = &"sewer_hidden_alcove"
+bidirectional = true
+hidden = true
+
+[sub_resource type="Resource" id="Resource_i3c4a"]
+script = ExtResource("2_rkvbm")
+id = &"village_sewer"
+title = "Sewer"
+position = Vector2(1379.9257, 193.52069)
+size = Vector2(428, 127)
+out_port_labels = Array[String](["Push Loose Brick", "To the River"])
+in_port_labels = Array[String](["To the Well", ""])
+
+[sub_resource type="Resource" id="Resource_xsxnh"]
+script = ExtResource("2_rkvbm")
+id = &"village_well"
+title = "Well"
+position = Vector2(479.92566, 193.52069)
+size = Vector2(439, 125)
+out_port_labels = Array[String](["Down the Well"])
+in_port_labels = Array[String](["To Village Square"])
+
+[sub_resource type="Resource" id="Resource_dsqlh"]
+script = ExtResource("2_rkvbm")
+id = &"village_well_bottom"
+title = "Well Bottom"
+position = Vector2(979.92566, 193.52069)
+size = Vector2(351, 143)
+out_port_labels = Array[String](["Enter Sewer"])
+in_port_labels = Array[String](["Climb Well"])
+
+[sub_resource type="Resource" id="Resource_52sh5"]
+script = ExtResource("2_rkvbm")
+id = &"village_tavern"
+title = "Tavern"
+position = Vector2(479.92566, 353.5207)
+size = Vector2(381.41992, 147.57983)
+out_port_labels = Array[String](["To the Cellar"])
+in_port_labels = Array[String](["Leave Tavern"])
+
+[sub_resource type="Resource" id="Resource_y3ukd"]
+script = ExtResource("2_rkvbm")
+id = &"village_dock"
+title = "Dock"
+position = Vector2(479.92566, 593.5207)
+size = Vector2(463.28003, 162.41989)
+out_port_labels = Array[String](["To the River"])
+in_port_labels = Array[String](["To Village Square"])
+
+[sub_resource type="Resource" id="Resource_g11fs"]
+script = ExtResource("2_rkvbm")
+id = &"village_square"
+title = "Village Square"
+position = Vector2(-40.07434, 313.5207)
+size = Vector2(425.47006, 153.94995)
+out_port_labels = Array[String](["To Well", "To the Tavern", "To Dock"])
+in_port_labels = Array[String](["", "", ""])
+
+[sub_resource type="Resource" id="Resource_i08cq"]
+script = ExtResource("2_rkvbm")
+id = &"tavern_cellar_secret_room"
+title = "Secret Room"
+position = Vector2(1379.9257, 373.5207)
+size = Vector2(518.93994, 146.36987)
+out_port_labels = Array[String]([""])
+in_port_labels = Array[String](["Leave the Secret Room"])
+
+[sub_resource type="Resource" id="Resource_s50ns"]
+script = ExtResource("2_rkvbm")
+id = &"sewer_hidden_alcove"
+title = "Hidden Alcove"
+position = Vector2(1959.9257, 173.52069)
+size = Vector2(442.70996, 162.42004)
+out_port_labels = Array[String]([""])
+in_port_labels = Array[String](["Leave the Alcove"])
+
+[sub_resource type="Resource" id="Resource_gtc0v"]
+script = ExtResource("2_rkvbm")
+id = &"village_tavern_cellar"
+title = "Cellar"
+position = Vector2(919.92566, 373.5207)
+size = Vector2(423.56006, 116.37012)
+out_port_labels = Array[String](["To Secret Room"])
+in_port_labels = Array[String](["Leave the Cellar"])
+
+[sub_resource type="Resource" id="Resource_26rhh"]
+script = ExtResource("2_rkvbm")
+id = &"village_river"
+title = "River"
+position = Vector2(2039.9257, 433.5207)
+size = Vector2(423.12012, 141)
+out_port_labels = Array[String](["", ""])
+in_port_labels = Array[String](["Enter Sewer", "To the Dock"])
+
+[resource]
+script = ExtResource("3_ciuy3")
+nodes = [SubResource("Resource_i3c4a"), SubResource("Resource_xsxnh"), SubResource("Resource_dsqlh"), SubResource("Resource_52sh5"), SubResource("Resource_y3ukd"), SubResource("Resource_g11fs"), SubResource("Resource_i08cq"), SubResource("Resource_s50ns"), SubResource("Resource_gtc0v"), SubResource("Resource_26rhh")]
+edges = [SubResource("Resource_hawok"), SubResource("Resource_rkvbm"), SubResource("Resource_ciuy3"), SubResource("Resource_y4xal"), SubResource("Resource_67hcq"), SubResource("Resource_ewtm6"), SubResource("Resource_snysd"), SubResource("Resource_yfp56"), SubResource("Resource_0yg8a"), SubResource("Resource_51ntd")]
+start_node_id = &"village_square"

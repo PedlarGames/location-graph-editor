@@ -1,0 +1,72 @@
+[gd_scene load_steps=3 format=3 uid="uid://bji8utgkrcuvy"]
+
+[ext_resource type="Script" uid="uid://hn63tq6ij6u6" path="res://addons/location_graph_editor/ui/location_graph_dock.gd" id="1"]
+[ext_resource type="Theme" uid="uid://jgqwwlo7jlge" path="res://addons/location_graph_editor/ui/location_graph_theme.tres" id="2"]
+
+[node name="LocationGraphDock" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource("2")
+script = ExtResource("1")
+
+[node name="Toolbar" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_right = 1024.0
+offset_bottom = 32.0
+
+[node name="NewBtn" type="Button" parent="Toolbar"]
+layout_mode = 2
+text = "New"
+
+[node name="OpenBtn" type="Button" parent="Toolbar"]
+layout_mode = 2
+text = "Open"
+
+[node name="ReloadBtn" type="Button" parent="Toolbar"]
+layout_mode = 2
+text = "Reload"
+
+[node name="SaveBtn" type="Button" parent="Toolbar"]
+layout_mode = 2
+text = "Save"
+
+[node name="SaveAsBtn" type="Button" parent="Toolbar"]
+layout_mode = 2
+text = "Save As"
+
+[node name="AddNodeBtn" type="Button" parent="Toolbar"]
+layout_mode = 2
+text = "Add Node"
+
+[node name="DeleteBtn" type="Button" parent="Toolbar"]
+layout_mode = 2
+text = "Delete"
+
+[node name="DirtyLabel" type="Label" parent="Toolbar"]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.65, 0, 1)
+text = "o"
+
+[node name="FileLabel" type="Label" parent="Toolbar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "File: -"
+
+[node name="SetStartBtn" type="Button" parent="Toolbar"]
+layout_mode = 2
+text = "Set Start"
+
+[node name="StartLabel" type="Label" parent="Toolbar"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Start: -"
+
+[node name="GraphEdit" type="GraphEdit" parent="."]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 36.0
+right_disconnects = true
