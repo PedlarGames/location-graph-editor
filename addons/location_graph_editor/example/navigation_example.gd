@@ -1,6 +1,6 @@
-# This script provides a simple example of how to navigate a LocationGraph.
-# It allows loading a LocationGraph resource, displays the current location,
-# and provides buttons to move to connected locations.
+# This script provides a comprehensive example of how to navigate a LocationGraph.
+# It demonstrates loading graphs, navigation, pathfinding, and dynamic edge management
+# (locking/unlocking doors and hiding/revealing secret passages).
 extends Control
 
 # Preload the required custom resource types for type safety and efficiency.
@@ -21,13 +21,18 @@ const LocationGraphRuntime = preload("res://addons/location_graph_editor/runtime
 @onready var path_to_location_input: LineEdit = %PathToLocationInput
 @onready var find_path_button: Button = %FindPathButton
 @onready var route_list_label: Label = %RouteListLabel
+@onready var locked_edges_vbox: VBoxContainer = %LockedEdgesContainer
+@onready var hidden_edges_vbox: VBoxContainer = %HiddenEdgesContainer
 
 # --- Navigation State ---
-# The loaded LocationGraph resource.
+# The loaded LocationGraph resource (instanced for runtime modifications).
 var location_graph: LocationGraph
 var runtime: LocationGraphRuntime = LocationGraphRuntime.new()
 # The ID of the location the player is currently at.
 var current_location_id: String = ""
+
+# Simulated player inventory for unlocking doors
+var player_inventory: Array[String] = []
 
 
 # Called when the node enters the scene tree for the first time.
@@ -36,6 +41,10 @@ func _ready() -> void:
 	load_graph_button.pressed.connect(_on_load_graph_button_pressed)
 	return_to_start_button.pressed.connect(_on_return_to_start_button_pressed)
 	find_path_button.pressed.connect(_on_find_path_button_pressed)
+	
+	# Initialize with some items in inventory for demo purposes
+	player_inventory = ["golden_key", "silver_key"]
+	
 	# Initialize the UI with default values.
 	_update_ui()
 
@@ -83,7 +92,8 @@ func _load_graph_from_path(path: String) -> void:
 		loaded_graph_name_label.text = "Failed to load graph."
 		return
 	
-	location_graph = resource as LocationGraph
+	# Create an instance so we can modify edges at runtime
+	location_graph = (resource as LocationGraph).create_instance()
 	runtime.set_graph(location_graph)
 	loaded_graph_name_label.text = String(path.get_file())
 	
@@ -99,6 +109,8 @@ func _update_ui() -> void:
 	_update_current_location_label()
 	_rebuild_exit_buttons()
 	_rebuild_all_locations_list()
+	_rebuild_locked_edges_list()
+	_rebuild_hidden_edges_list()
 
 
 # Updates the label showing the current location's ID and title.
@@ -139,17 +151,34 @@ func _rebuild_exit_buttons() -> void:
 	for edge in runtime.get_edges_from(current_location_id):
 		var destination_node_id := String(edge.to_id)
 		var destination_node := runtime.get_location_node(destination_node_id)
+		
+		# Check if edge is locked or hidden
+		var is_locked: bool = edge.locked
+		var is_hidden: bool = edge.hidden if "hidden" in edge else false
+		
 		# Determine the button's text. Use the port label if available, otherwise generate a default.
 		var button_text := runtime.get_out_port_label(current_location_id, int(edge.from_port))
 		if button_text.strip_edges() == "":
 			var destination_title := destination_node_id if destination_node == null else String(destination_node.title)
 			button_text = "To %s" % destination_title
+		
+		# Add status indicators
+		if is_locked and is_hidden:
+			button_text = "[LOCKED & HIDDEN] " + button_text
+		elif is_locked:
+			button_text = "[LOCKED] " + button_text
+		elif is_hidden:
+			button_text = "[HIDDEN] " + button_text
 
 		# Create and configure the button.
 		var exit_button := Button.new()
 		exit_button.name = "ExitButton_%d_%s" % [button_index, destination_node_id]
 		exit_button.text = button_text
 		exit_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		
+		# Disable locked or hidden buttons
+		exit_button.disabled = is_locked or is_hidden
+		
 		exit_button.pressed.connect(func():
 			current_location_id = destination_node_id
 			_update_ui()
@@ -170,16 +199,33 @@ func _rebuild_exit_buttons() -> void:
 		# edge is a LocationEdgeData that targets current_location_id
 		if not edge.bidirectional:
 			continue
+			
 		var source_node_id := String(edge.from_id)
 		var source_node := runtime.get_location_node(source_node_id)
+		
+		# Check if edge is locked or hidden
+		var is_locked: bool = edge.locked
+		var is_hidden: bool = edge.hidden if "hidden" in edge else false
+		
 		var reverse_navigation_label := runtime.get_in_port_label(current_location_id, int(edge.to_port))
 		if reverse_navigation_label.strip_edges() == "":
 			var source_title := source_node_id if source_node == null else String(source_node.title)
 			reverse_navigation_label = "From %s" % source_title
+		
+		# Add status indicators
+		if is_locked and is_hidden:
+			reverse_navigation_label = "[LOCKED & HIDDEN] " + reverse_navigation_label
+		elif is_locked:
+			reverse_navigation_label = "[LOCKED] " + reverse_navigation_label
+		elif is_hidden:
+			reverse_navigation_label = "[HIDDEN] " + reverse_navigation_label
+			
 		var reverse_exit_button := Button.new()
 		reverse_exit_button.name = "ExitButton_%d_%s_rev" % [button_index, source_node_id]
 		reverse_exit_button.text = reverse_navigation_label
 		reverse_exit_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		reverse_exit_button.disabled = is_locked or is_hidden
+		
 		reverse_exit_button.pressed.connect(func():
 			current_location_id = source_node_id
 			_update_ui()
@@ -254,3 +300,122 @@ func _get_outgoing_port_label(node: LocationNodeData, port_index: int) -> String
 # Retrieves the label for a specific incoming port on a node.
 func _get_incoming_port_label(node: LocationNodeData, port_index: int) -> String:
 	return runtime.get_in_port_label(String(node.id), port_index)
+
+
+# Rebuilds the list of locked edges with unlock buttons.
+func _rebuild_locked_edges_list() -> void:
+	# Clear existing entries.
+	for child in locked_edges_vbox.get_children():
+		if String(child.name).begins_with("LockedEdge_"):
+			locked_edges_vbox.remove_child(child)
+			child.queue_free()
+	
+	if location_graph == null:
+		return
+	
+	var locked_index: int = 0
+	# Find all locked edges in the graph
+	for node in location_graph.nodes:
+		var node_id := String(node.id)
+		for edge in runtime.get_edges_from(node_id):
+			if edge.locked:
+				var from_name := runtime.get_location_name(node_id)
+				var to_name := runtime.get_location_name(String(edge.to_id))
+				var label: String = edge.label if edge.label != "" else runtime.get_out_port_label(node_id, edge.from_port)
+				
+				# Create a container for the edge info and button
+				var hbox := HBoxContainer.new()
+				hbox.name = "LockedEdge_%d" % locked_index
+				
+				var edge_label := Label.new()
+				var edge_text := "%s → %s" % [from_name, to_name]
+				if label != "":
+					edge_text += " (%s)" % label
+				edge_label.text = edge_text
+				edge_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				hbox.add_child(edge_label)
+				
+				# Add unlock button
+				var unlock_button := Button.new()
+				unlock_button.text = "Unlock"
+				unlock_button.pressed.connect(_create_unlock_callback(node_id, String(edge.to_id)))
+				hbox.add_child(unlock_button)
+				
+				locked_edges_vbox.add_child(hbox)
+				locked_index += 1
+	
+	# Show message if no locked edges
+	if locked_index == 0:
+		var no_locks_label := Label.new()
+		no_locks_label.name = "LockedEdge_None"
+		no_locks_label.text = "No locked edges"
+		no_locks_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		locked_edges_vbox.add_child(no_locks_label)
+
+
+# Rebuilds the list of hidden edges with reveal buttons.
+func _rebuild_hidden_edges_list() -> void:
+	# Clear existing entries.
+	for child in hidden_edges_vbox.get_children():
+		if String(child.name).begins_with("HiddenEdge_"):
+			hidden_edges_vbox.remove_child(child)
+			child.queue_free()
+	
+	if location_graph == null:
+		return
+	
+	var hidden_index: int = 0
+	# Find all hidden edges in the graph
+	for node in location_graph.nodes:
+		var node_id := String(node.id)
+		for edge in runtime.get_edges_from(node_id):
+			var is_hidden: bool = "hidden" in edge and edge.hidden
+			if is_hidden:
+				var from_name := runtime.get_location_name(node_id)
+				var to_name := runtime.get_location_name(String(edge.to_id))
+				var label: String = edge.label if edge.label != "" else runtime.get_out_port_label(node_id, edge.from_port)
+				
+				# Create a container for the edge info and button
+				var hbox := HBoxContainer.new()
+				hbox.name = "HiddenEdge_%d" % hidden_index
+				
+				var edge_label := Label.new()
+				var edge_text := "%s → %s" % [from_name, to_name]
+				if label != "":
+					edge_text += " (%s)" % label
+				edge_label.text = edge_text
+				edge_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+				hbox.add_child(edge_label)
+				
+				# Add reveal button
+				var reveal_button := Button.new()
+				reveal_button.text = "Reveal"
+				reveal_button.pressed.connect(_create_unhide_callback(node_id, String(edge.to_id)))
+				hbox.add_child(reveal_button)
+				
+				hidden_edges_vbox.add_child(hbox)
+				hidden_index += 1
+	
+	# Show message if no hidden edges
+	if hidden_index == 0:
+		var no_hidden_label := Label.new()
+		no_hidden_label.name = "HiddenEdge_None"
+		no_hidden_label.text = "No hidden edges"
+		no_hidden_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		hidden_edges_vbox.add_child(no_hidden_label)
+
+
+# Creates a callback for unlocking an edge (needed for proper closure in loops)
+func _create_unlock_callback(from_id: String, to_id: String) -> Callable:
+	return func():
+		if runtime.unlock_edge(from_id, to_id):
+			print("Unlocked edge: %s → %s" % [from_id, to_id])
+			_update_ui()
+
+
+# Creates a callback for revealing a hidden edge (needed for proper closure in loops)
+func _create_unhide_callback(from_id: String, to_id: String) -> Callable:
+	return func():
+		if runtime.unhide_edge(from_id, to_id):
+			print("Revealed edge: %s → %s" % [from_id, to_id])
+			_update_ui()
