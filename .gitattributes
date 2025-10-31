@@ -1,2 +1,10 @@
 # Normalize EOL for all files that Git considers text files.
 * text=auto eol=lf
+
+# Files not needed in Asset Library distribution
+/screenshots export-ignore
+/.editorconfig export-ignore
+/.godot export-ignore
+/icon.svg export-ignore
+/icon.svg.import export-ignore
+/project.godot export-ignore
