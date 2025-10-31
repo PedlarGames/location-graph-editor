@@ -131,7 +131,6 @@ else:
 ## Documentation
 
 - **[Runtime Implementation Guide](addons/location_graph_editor/RUNTIME_IMPLEMENTATION_GUIDE.md)** - Comprehensive API reference with examples
-- **[Plugin README](addons/location_graph_editor/README.md)** - Editor usage and features
 - **[Example Scene](addons/location_graph_editor/example/)** - Working demo project
 
 ## Use Cases
