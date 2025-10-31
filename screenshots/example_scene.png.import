@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b4ogqpqewu78"
-path="res://.godot/imported/example_scene.png-337c4330e8ebff4f0ea22193edce6f64.ctex"
+path="res://.godot/imported/example_scene.png-078e15db9af2eb7e2de2c6b26c5e3bde.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/location_graph_editor/screenshots/example_scene.png"
-dest_files=["res://.godot/imported/example_scene.png-337c4330e8ebff4f0ea22193edce6f64.ctex"]
+source_file="res://screenshots/example_scene.png"
+dest_files=["res://.godot/imported/example_scene.png-078e15db9af2eb7e2de2c6b26c5e3bde.ctex"]
 
 [params]
 

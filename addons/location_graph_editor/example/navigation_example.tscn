@@ -13,163 +13,158 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_aosus")
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="PanelContainer" type="PanelContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="PanelContainer"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/ScrollContainer"]
+layout_mode = 2
 size_flags_horizontal = 3
-
-[node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
-layout_mode = 2
-
-[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer"]
-layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/margin_left = 32
 theme_override_constants/margin_top = 32
 theme_override_constants/margin_right = 32
 theme_override_constants/margin_bottom = 32
 
-[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/PanelContainer/MarginContainer"]
-custom_minimum_size = Vector2(1100, 600)
-layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 4
-
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/ScrollContainer/MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_constants/separation = 16
 
-[node name="LoadDataContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+[node name="LoadDataContainer" type="HBoxContainer" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="LoadGraphDataButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/LoadDataContainer"]
+[node name="LoadGraphDataButton" type="Button" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/LoadDataContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Load Location Graph Data"
 
-[node name="LoadedGraphNameLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/LoadDataContainer"]
+[node name="LoadedGraphNameLabel" type="Label" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/LoadDataContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "No graph loaded"
 
-[node name="ActiveLocationContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+[node name="ActiveLocationContainer" type="HBoxContainer" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="CurrentLocationLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/ActiveLocationContainer"]
+[node name="CurrentLocationLabel" type="Label" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/ActiveLocationContainer"]
 layout_mode = 2
 text = "Current Location:"
 
-[node name="CurrentLocationValueLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/ActiveLocationContainer"]
+[node name="CurrentLocationValueLabel" type="Label" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/ActiveLocationContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "No location set"
 
-[node name="HSeparator" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="NavigationOptionsContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+[node name="NavigationOptionsContainer" type="HBoxContainer" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="ExitsLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/NavigationOptionsContainer"]
+[node name="ExitsLabel" type="Label" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/NavigationOptionsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "🚪 Available Exits:"
 
-[node name="ExitsContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/NavigationOptionsContainer"]
+[node name="ExitsContainer" type="VBoxContainer" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/NavigationOptionsContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="ReturnButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/NavigationOptionsContainer/ExitsContainer"]
+[node name="ReturnButton" type="Button" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/NavigationOptionsContainer/ExitsContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Return to Start"
 
-[node name="HSeparator2" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+[node name="HSeparator2" type="HSeparator" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="LockedEdgesSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+[node name="LockedEdgesSection" type="VBoxContainer" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="LockedEdgesLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/LockedEdgesSection"]
+[node name="LockedEdgesLabel" type="Label" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/LockedEdgesSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
 theme_override_font_sizes/font_size = 14
 text = "🔒 Locked Edges (click to unlock):"
 
-[node name="LockedEdgesContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/LockedEdgesSection"]
+[node name="LockedEdgesContainer" type="VBoxContainer" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/LockedEdgesSection"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="HSeparator3" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+[node name="HSeparator3" type="HSeparator" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="HiddenEdgesSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+[node name="HiddenEdgesSection" type="VBoxContainer" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="HiddenEdgesLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/HiddenEdgesSection"]
+[node name="HiddenEdgesLabel" type="Label" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/HiddenEdgesSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.6, 1, 1)
 theme_override_font_sizes/font_size = 14
 text = "👁 Hidden Edges (click to reveal):"
 
-[node name="HiddenEdgesContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/HiddenEdgesSection"]
+[node name="HiddenEdgesContainer" type="VBoxContainer" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/HiddenEdgesSection"]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="HSeparator4" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+[node name="HSeparator4" type="HSeparator" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/HBoxContainer"]
+[node name="Label" type="Label" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "📍 All Locations in Graph:"
 
-[node name="AllLocationsContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/HBoxContainer"]
+[node name="AllLocationsContainer" type="VBoxContainer" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/HBoxContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="PathInputContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+[node name="PathInputContainer" type="HBoxContainer" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="PathLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/PathInputContainer"]
+[node name="PathLabel" type="Label" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/PathInputContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "🗺️ Pathfinding:"
 
-[node name="PathFromLocationInput" type="LineEdit" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/PathInputContainer"]
+[node name="PathFromLocationInput" type="LineEdit" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/PathInputContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "From Location ID"
 
-[node name="PathToLocationInput" type="LineEdit" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/PathInputContainer"]
+[node name="PathToLocationInput" type="LineEdit" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/PathInputContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 placeholder_text = "To Location ID"
 
-[node name="FindPathButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/PathInputContainer"]
+[node name="FindPathButton" type="Button" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/PathInputContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 text = "Find Path"
 
-[node name="PathRouteContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer"]
+[node name="PathRouteContainer" type="VBoxContainer" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="RouteLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/PathRouteContainer"]
+[node name="RouteLabel" type="Label" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/PathRouteContainer"]
 layout_mode = 2
 text = "Route:"
 
-[node name="RouteListLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/PathRouteContainer"]
+[node name="RouteListLabel" type="Label" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/PathRouteContainer"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
