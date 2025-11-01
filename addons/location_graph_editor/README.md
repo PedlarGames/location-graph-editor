@@ -1,6 +1,6 @@
 # Location Graph Editor for Godot 4
 
-A visual editor for creating and managing node-based location graphs. Perfect for text adventures, RPGs, narrative-driven games, and any project requiring structured navigation between interconnected locations.
+A visual editor for creating and managing node-based location graphs. Useful for text adventures, RPGs, narrative-driven games, and any project requiring structured navigation between interconnected locations.
 
 ## Features
 

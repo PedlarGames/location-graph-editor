@@ -64,7 +64,7 @@ A handy Godot 4 plugin for creating, managing, and utilizing node-based location
 
 ### 1. Create a Location Graph
 
-1. In Godot editor, go to **Project → Tools → Location Graph Editor** (or use the dock)
+1. In Godot editor, go to **Project → Tools → Location Graph Editor** (or use the dock below the main editor, next to the Shader Editor)
 2. Click **New Graph** to create a new LocationGraph resource
 3. Add nodes by clicking **Add Node** or right-clicking in the graph area
 4. Connect nodes by dragging from one port to another
