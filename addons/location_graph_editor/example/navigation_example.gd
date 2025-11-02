@@ -259,6 +259,11 @@ func _rebuild_all_locations_list() -> void:
 # Called when the "Find Path" button is pressed.
 # Finds and displays a path between two specified locations.
 func _on_find_path_button_pressed() -> void:
+	_update_pathfinding_display()
+
+
+# Updates the pathfinding display with current path
+func _update_pathfinding_display() -> void:
 	route_list_label.text = ""
 	if location_graph == null:
 		route_list_label.text = "No graph loaded."
@@ -277,7 +282,7 @@ func _on_find_path_button_pressed() -> void:
 	# Use bfs from location_graph_runtime.gd to find the path.
 	var path: Array[String] = runtime.find_path_bfs(from_id, to_id) as Array[String]
 	if path.size() == 0:
-		route_list_label.text = "No path found from %s to %s." % [from_id, to_id]
+		route_list_label.text = "No path found from %s to %s. (Check for locked/hidden edges)" % [from_id, to_id]
 		return
 	# Display the found path.
 	route_list_label.text = "Path: " + " -> ".join(path)
@@ -306,7 +311,7 @@ func _get_incoming_port_label(node: LocationNodeData, port_index: int) -> String
 func _rebuild_locked_edges_list() -> void:
 	# Clear existing entries.
 	for child in locked_edges_vbox.get_children():
-		if String(child.name).begins_with("LockedEdge_"):
+		if String(child.name).begins_with("LockedEdge_") or String(child.name).begins_with("UnlockedEdge_"):
 			locked_edges_vbox.remove_child(child)
 			child.queue_free()
 	
@@ -314,50 +319,61 @@ func _rebuild_locked_edges_list() -> void:
 		return
 	
 	var locked_index: int = 0
-	# Find all locked edges in the graph
+	var unlocked_count: int = 0
+	
+	# Find all edges in the graph and categorize them
 	for node in location_graph.nodes:
 		var node_id := String(node.id)
 		for edge in runtime.get_edges_from(node_id):
+			var from_name := runtime.get_location_name(node_id)
+			var to_name := runtime.get_location_name(String(edge.to_id))
+			var label: String = edge.label if edge.label != "" else runtime.get_out_port_label(node_id, edge.from_port)
+			
+			# Create a container for the edge info and button
+			var hbox := HBoxContainer.new()
+			
+			var edge_label := Label.new()
+			var edge_text := "%s → %s" % [from_name, to_name]
+			if label != "":
+				edge_text += " (%s)" % label
+			edge_label.text = edge_text
+			edge_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			hbox.add_child(edge_label)
+			
 			if edge.locked:
-				var from_name := runtime.get_location_name(node_id)
-				var to_name := runtime.get_location_name(String(edge.to_id))
-				var label: String = edge.label if edge.label != "" else runtime.get_out_port_label(node_id, edge.from_port)
-				
-				# Create a container for the edge info and button
-				var hbox := HBoxContainer.new()
+				# Add unlock button for locked edges
 				hbox.name = "LockedEdge_%d" % locked_index
-				
-				var edge_label := Label.new()
-				var edge_text := "%s → %s" % [from_name, to_name]
-				if label != "":
-					edge_text += " (%s)" % label
-				edge_label.text = edge_text
-				edge_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				hbox.add_child(edge_label)
-				
-				# Add unlock button
 				var unlock_button := Button.new()
 				unlock_button.text = "Unlock"
 				unlock_button.pressed.connect(_create_unlock_callback(node_id, String(edge.to_id)))
 				hbox.add_child(unlock_button)
-				
 				locked_edges_vbox.add_child(hbox)
 				locked_index += 1
+			else:
+				# Add lock button for unlocked edges
+				hbox.name = "UnlockedEdge_%d" % unlocked_count
+				edge_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+				var lock_button := Button.new()
+				lock_button.text = "Lock"
+				lock_button.pressed.connect(_create_lock_callback(node_id, String(edge.to_id)))
+				hbox.add_child(lock_button)
+				locked_edges_vbox.add_child(hbox)
+				unlocked_count += 1
 	
-	# Show message if no locked edges
-	if locked_index == 0:
-		var no_locks_label := Label.new()
-		no_locks_label.name = "LockedEdge_None"
-		no_locks_label.text = "No locked edges"
-		no_locks_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-		locked_edges_vbox.add_child(no_locks_label)
+	# Show message if no edges at all
+	if locked_index == 0 and unlocked_count == 0:
+		var no_edges_label := Label.new()
+		no_edges_label.name = "LockedEdge_None"
+		no_edges_label.text = "No edges in graph"
+		no_edges_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		locked_edges_vbox.add_child(no_edges_label)
 
 
 # Rebuilds the list of hidden edges with reveal buttons.
 func _rebuild_hidden_edges_list() -> void:
 	# Clear existing entries.
 	for child in hidden_edges_vbox.get_children():
-		if String(child.name).begins_with("HiddenEdge_"):
+		if String(child.name).begins_with("HiddenEdge_") or String(child.name).begins_with("VisibleEdge_"):
 			hidden_edges_vbox.remove_child(child)
 			child.queue_free()
 	
@@ -365,44 +381,55 @@ func _rebuild_hidden_edges_list() -> void:
 		return
 	
 	var hidden_index: int = 0
-	# Find all hidden edges in the graph
+	var visible_count: int = 0
+	
+	# Find all edges in the graph and categorize them
 	for node in location_graph.nodes:
 		var node_id := String(node.id)
 		for edge in runtime.get_edges_from(node_id):
 			var is_hidden: bool = "hidden" in edge and edge.hidden
+			var from_name := runtime.get_location_name(node_id)
+			var to_name := runtime.get_location_name(String(edge.to_id))
+			var label: String = edge.label if edge.label != "" else runtime.get_out_port_label(node_id, edge.from_port)
+			
+			# Create a container for the edge info and button
+			var hbox := HBoxContainer.new()
+			
+			var edge_label := Label.new()
+			var edge_text := "%s → %s" % [from_name, to_name]
+			if label != "":
+				edge_text += " (%s)" % label
+			edge_label.text = edge_text
+			edge_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			hbox.add_child(edge_label)
+			
 			if is_hidden:
-				var from_name := runtime.get_location_name(node_id)
-				var to_name := runtime.get_location_name(String(edge.to_id))
-				var label: String = edge.label if edge.label != "" else runtime.get_out_port_label(node_id, edge.from_port)
-				
-				# Create a container for the edge info and button
-				var hbox := HBoxContainer.new()
+				# Add reveal button for hidden edges
 				hbox.name = "HiddenEdge_%d" % hidden_index
-				
-				var edge_label := Label.new()
-				var edge_text := "%s → %s" % [from_name, to_name]
-				if label != "":
-					edge_text += " (%s)" % label
-				edge_label.text = edge_text
-				edge_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-				hbox.add_child(edge_label)
-				
-				# Add reveal button
 				var reveal_button := Button.new()
 				reveal_button.text = "Reveal"
 				reveal_button.pressed.connect(_create_unhide_callback(node_id, String(edge.to_id)))
 				hbox.add_child(reveal_button)
-				
 				hidden_edges_vbox.add_child(hbox)
 				hidden_index += 1
+			else:
+				# Add hide button for visible edges
+				hbox.name = "VisibleEdge_%d" % visible_count
+				edge_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+				var hide_button := Button.new()
+				hide_button.text = "Hide"
+				hide_button.pressed.connect(_create_hide_callback(node_id, String(edge.to_id)))
+				hbox.add_child(hide_button)
+				hidden_edges_vbox.add_child(hbox)
+				visible_count += 1
 	
-	# Show message if no hidden edges
-	if hidden_index == 0:
-		var no_hidden_label := Label.new()
-		no_hidden_label.name = "HiddenEdge_None"
-		no_hidden_label.text = "No hidden edges"
-		no_hidden_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-		hidden_edges_vbox.add_child(no_hidden_label)
+	# Show message if no edges at all
+	if hidden_index == 0 and visible_count == 0:
+		var no_edges_label := Label.new()
+		no_edges_label.name = "HiddenEdge_None"
+		no_edges_label.text = "No edges in graph"
+		no_edges_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		hidden_edges_vbox.add_child(no_edges_label)
 
 
 # Creates a callback for unlocking an edge (needed for proper closure in loops)
@@ -411,6 +438,16 @@ func _create_unlock_callback(from_id: String, to_id: String) -> Callable:
 		if runtime.unlock_edge(from_id, to_id):
 			print("Unlocked edge: %s → %s" % [from_id, to_id])
 			_update_ui()
+			_update_pathfinding_display()
+
+
+# Creates a callback for locking an edge (needed for proper closure in loops)
+func _create_lock_callback(from_id: String, to_id: String) -> Callable:
+	return func():
+		if runtime.lock_edge(from_id, to_id):
+			print("Locked edge: %s → %s" % [from_id, to_id])
+			_update_ui()
+			_update_pathfinding_display()
 
 
 # Creates a callback for revealing a hidden edge (needed for proper closure in loops)
@@ -419,3 +456,13 @@ func _create_unhide_callback(from_id: String, to_id: String) -> Callable:
 		if runtime.unhide_edge(from_id, to_id):
 			print("Revealed edge: %s → %s" % [from_id, to_id])
 			_update_ui()
+			_update_pathfinding_display()
+
+
+# Creates a callback for hiding an edge (needed for proper closure in loops)
+func _create_hide_callback(from_id: String, to_id: String) -> Callable:
+	return func():
+		if runtime.hide_edge(from_id, to_id):
+			print("Hidden edge: %s → %s" % [from_id, to_id])
+			_update_ui()
+			_update_pathfinding_display()

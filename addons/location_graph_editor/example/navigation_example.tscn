@@ -94,7 +94,7 @@ layout_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
 theme_override_font_sizes/font_size = 14
-text = "🔒 Locked Edges (click to unlock):"
+text = "🔒 Edge Locking (click to lock/unlock):"
 
 [node name="LockedEdgesContainer" type="VBoxContainer" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/LockedEdgesSection"]
 unique_name_in_owner = true
@@ -110,7 +110,7 @@ layout_mode = 2
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.6, 1, 1)
 theme_override_font_sizes/font_size = 14
-text = "👁 Hidden Edges (click to reveal):"
+text = "👁 Edge Visibility (click to hide/reveal):"
 
 [node name="HiddenEdgesContainer" type="VBoxContainer" parent="PanelContainer/ScrollContainer/MarginContainer/VBoxContainer/HiddenEdgesSection"]
 unique_name_in_owner = true
