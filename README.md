@@ -5,9 +5,13 @@ A handy Godot 4 plugin for creating, managing, and utilizing node-based location
 ![Godot 4.5+](https://img.shields.io/badge/Godot-4.5+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
+## Screenshots
+
 ![Location Graph Editor Screenshot](screenshots/example_graph.png)
 
 ![Example Scene Screenshot](screenshots/example_scene.png)
+
+![In-Game Example Scene](screenshots/in-game-example.png)
 
 ## Features
 
