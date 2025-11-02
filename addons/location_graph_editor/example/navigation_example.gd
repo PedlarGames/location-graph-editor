@@ -31,9 +31,6 @@ var runtime: LocationGraphRuntime = LocationGraphRuntime.new()
 # The ID of the location the player is currently at.
 var current_location_id: String = ""
 
-# Simulated player inventory for unlocking doors
-var player_inventory: Array[String] = []
-
 # Track initially locked and hidden edges (as [from_id, to_id] pairs)
 var initially_locked_edges: Array = []
 var initially_hidden_edges: Array = []
@@ -45,9 +42,6 @@ func _ready() -> void:
 	load_graph_button.pressed.connect(_on_load_graph_button_pressed)
 	return_to_start_button.pressed.connect(_on_return_to_start_button_pressed)
 	find_path_button.pressed.connect(_on_find_path_button_pressed)
-	
-	# Initialize with some items in inventory for demo purposes
-	player_inventory = ["golden_key", "silver_key"]
 	
 	# Initialize the UI with default values.
 	_update_ui()
@@ -126,7 +120,7 @@ func _update_current_location_label() -> void:
 		current_location_label.text = "No location set"
 		return
 		
-	var current_node_data := _get_node_by_id(current_location_id)
+	var current_node_data := runtime.get_location_node(current_location_id)
 	if current_node_data:
 		# Display both the ID and the custom title for clarity.
 		current_location_label.text = "%s (%s)" % [String(current_node_data.id), String(current_node_data.title)]
@@ -148,16 +142,11 @@ func _rebuild_exit_buttons() -> void:
 	if location_graph == null or current_location_id == "":
 		return
 
-	var current_node := runtime.get_location_node(current_location_id)
-	if current_node == null:
-		return
-
 	var button_index: int = 0
 	
 	# --- Create buttons for outgoing edges ---
 	for edge in runtime.get_edges_from(current_location_id):
 		var destination_node_id := String(edge.to_id)
-		var destination_node := runtime.get_location_node(destination_node_id)
 		
 		# Check if edge is locked or hidden
 		var is_locked: bool = edge.locked
@@ -166,8 +155,7 @@ func _rebuild_exit_buttons() -> void:
 		# Determine the button's text. Use the port label if available, otherwise generate a default.
 		var button_text := runtime.get_out_port_label(current_location_id, int(edge.from_port))
 		if button_text.strip_edges() == "":
-			var destination_title := destination_node_id if destination_node == null else String(destination_node.title)
-			button_text = "To %s" % destination_title
+			button_text = "To %s" % runtime.get_location_name(destination_node_id)
 		
 		# Add status indicators
 		if is_locked and is_hidden:
@@ -208,7 +196,6 @@ func _rebuild_exit_buttons() -> void:
 			continue
 			
 		var source_node_id := String(edge.from_id)
-		var source_node := runtime.get_location_node(source_node_id)
 		
 		# Check if edge is locked or hidden
 		var is_locked: bool = edge.locked
@@ -216,8 +203,7 @@ func _rebuild_exit_buttons() -> void:
 		
 		var reverse_navigation_label := runtime.get_in_port_label(current_location_id, int(edge.to_port))
 		if reverse_navigation_label.strip_edges() == "":
-			var source_title := source_node_id if source_node == null else String(source_node.title)
-			reverse_navigation_label = "From %s" % source_title
+			reverse_navigation_label = "From %s" % runtime.get_location_name(source_node_id)
 		
 		# Add status indicators
 		if is_locked and is_hidden:
@@ -281,10 +267,10 @@ func _update_pathfinding_display() -> void:
 	if from_id == "" or to_id == "":
 		return
 	
-	if _get_node_by_id(from_id) == null:
+	if runtime.get_location_node(from_id) == null:
 		route_list_label.text = "From location ID not found: %s" % from_id
 		return
-	if _get_node_by_id(to_id) == null:
+	if runtime.get_location_node(to_id) == null:
 		route_list_label.text = "To location ID not found: %s" % to_id
 		return
 	# Use bfs from location_graph_runtime.gd to find the path.
@@ -318,21 +304,6 @@ func _track_initial_edge_states() -> void:
 			var is_hidden: bool = "hidden" in edge and edge.hidden
 			if is_hidden:
 				initially_hidden_edges.append(edge_pair)
-
-# Finds and returns a LocationNodeData from the graph by its ID.
-# Returns null if the graph is not loaded or the node is not found.
-func _get_node_by_id(id: String) -> LocationNodeData:
-	return runtime.get_location_node(id)
-
-
-# Retrieves the label for a specific outgoing port on a node.
-func _get_outgoing_port_label(node: LocationNodeData, port_index: int) -> String:
-	return runtime.get_out_port_label(String(node.id), port_index)
-
-
-# Retrieves the label for a specific incoming port on a node.
-func _get_incoming_port_label(node: LocationNodeData, port_index: int) -> String:
-	return runtime.get_in_port_label(String(node.id), port_index)
 
 
 # Rebuilds the list of locked edges with unlock buttons.
