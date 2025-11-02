@@ -34,6 +34,10 @@ var current_location_id: String = ""
 # Simulated player inventory for unlocking doors
 var player_inventory: Array[String] = []
 
+# Track initially locked and hidden edges (as [from_id, to_id] pairs)
+var initially_locked_edges: Array = []
+var initially_hidden_edges: Array = []
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -96,6 +100,9 @@ func _load_graph_from_path(path: String) -> void:
 	location_graph = (resource as LocationGraph).create_instance()
 	runtime.set_graph(location_graph)
 	loaded_graph_name_label.text = String(path.get_file())
+	
+	# Track initially locked and hidden edges
+	_track_initial_edge_states()
 	
 	# Set the current location to the graph's start node or fallback to first via runtime.
 	current_location_id = runtime.get_start_or_first_id()
@@ -292,6 +299,26 @@ func _update_pathfinding_display() -> void:
 
 # --- Helper Functions ---
 
+# Tracks which edges are initially locked or hidden when the graph is loaded
+func _track_initial_edge_states() -> void:
+	initially_locked_edges.clear()
+	initially_hidden_edges.clear()
+	
+	if location_graph == null:
+		return
+	
+	for node in location_graph.nodes:
+		var node_id := String(node.id)
+		for edge in runtime.get_edges_from(node_id):
+			var edge_pair := [String(edge.from_id), String(edge.to_id)]
+			
+			if edge.locked:
+				initially_locked_edges.append(edge_pair)
+			
+			var is_hidden: bool = "hidden" in edge and edge.hidden
+			if is_hidden:
+				initially_hidden_edges.append(edge_pair)
+
 # Finds and returns a LocationNodeData from the graph by its ID.
 # Returns null if the graph is not loaded or the node is not found.
 func _get_node_by_id(id: String) -> LocationNodeData:
@@ -312,7 +339,7 @@ func _get_incoming_port_label(node: LocationNodeData, port_index: int) -> String
 func _rebuild_locked_edges_list() -> void:
 	# Clear existing entries.
 	for child in locked_edges_vbox.get_children():
-		if String(child.name).begins_with("LockedEdge_") or String(child.name).begins_with("UnlockedEdge_"):
+		if String(child.name).begins_with("LockedEdge_"):
 			locked_edges_vbox.remove_child(child)
 			child.queue_free()
 	
@@ -320,52 +347,54 @@ func _rebuild_locked_edges_list() -> void:
 		return
 	
 	var locked_index: int = 0
-	var unlocked_count: int = 0
 	
-	# Find all edges in the graph and categorize them
-	for node in location_graph.nodes:
-		var node_id := String(node.id)
-		for edge in runtime.get_edges_from(node_id):
-			var from_name := runtime.get_location_name(node_id)
-			var to_name := runtime.get_location_name(String(edge.to_id))
-			var label: String = edge.label if edge.label != "" else runtime.get_out_port_label(node_id, edge.from_port)
-			
-			# Create a container for the edge info and button
-			var hbox := HBoxContainer.new()
-			
-			var edge_label := Label.new()
-			var edge_text := "%s → %s" % [from_name, to_name]
-			if label != "":
-				edge_text += " (%s)" % label
-			edge_label.text = edge_text
-			edge_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			hbox.add_child(edge_label)
-			
-			if edge.locked:
-				# Add unlock button for locked edges
-				hbox.name = "LockedEdge_%d" % locked_index
-				var unlock_button := Button.new()
-				unlock_button.text = "Unlock"
-				unlock_button.pressed.connect(_create_unlock_callback(node_id, String(edge.to_id)))
-				hbox.add_child(unlock_button)
-				locked_edges_vbox.add_child(hbox)
-				locked_index += 1
-			else:
-				# Add lock button for unlocked edges
-				hbox.name = "UnlockedEdge_%d" % unlocked_count
-				edge_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-				var lock_button := Button.new()
-				lock_button.text = "Lock"
-				lock_button.pressed.connect(_create_lock_callback(node_id, String(edge.to_id)))
-				hbox.add_child(lock_button)
-				locked_edges_vbox.add_child(hbox)
-				unlocked_count += 1
+	# Only show edges that were initially locked
+	for edge_pair in initially_locked_edges:
+		var from_id: String = edge_pair[0]
+		var to_id: String = edge_pair[1]
+		
+		var edge := runtime.get_edge_between_including_locked(from_id, to_id)
+		if edge == null:
+			continue
+		
+		var from_name := runtime.get_location_name(from_id)
+		var to_name := runtime.get_location_name(to_id)
+		var label: String = edge.label if edge.label != "" else runtime.get_out_port_label(from_id, edge.from_port)
+		
+		# Create a container for the edge info and button
+		var hbox := HBoxContainer.new()
+		hbox.name = "LockedEdge_%d" % locked_index
+		
+		var edge_label := Label.new()
+		var edge_text := "%s → %s" % [from_name, to_name]
+		if label != "":
+			edge_text += " (%s)" % label
+		edge_label.text = edge_text
+		edge_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hbox.add_child(edge_label)
+		
+		if edge.locked:
+			# Add unlock button for locked edges
+			var unlock_button := Button.new()
+			unlock_button.text = "Unlock"
+			unlock_button.pressed.connect(_create_unlock_callback(from_id, to_id))
+			hbox.add_child(unlock_button)
+		else:
+			# Show as unlocked (grayed out with lock button)
+			edge_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+			var lock_button := Button.new()
+			lock_button.text = "Lock"
+			lock_button.pressed.connect(_create_lock_callback(from_id, to_id))
+			hbox.add_child(lock_button)
+		
+		locked_edges_vbox.add_child(hbox)
+		locked_index += 1
 	
-	# Show message if no edges at all
-	if locked_index == 0 and unlocked_count == 0:
+	# Show message if no initially locked edges
+	if initially_locked_edges.size() == 0:
 		var no_edges_label := Label.new()
 		no_edges_label.name = "LockedEdge_None"
-		no_edges_label.text = "No edges in graph"
+		no_edges_label.text = "No locked edges in graph"
 		no_edges_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 		locked_edges_vbox.add_child(no_edges_label)
 
@@ -374,7 +403,7 @@ func _rebuild_locked_edges_list() -> void:
 func _rebuild_hidden_edges_list() -> void:
 	# Clear existing entries.
 	for child in hidden_edges_vbox.get_children():
-		if String(child.name).begins_with("HiddenEdge_") or String(child.name).begins_with("VisibleEdge_"):
+		if String(child.name).begins_with("HiddenEdge_"):
 			hidden_edges_vbox.remove_child(child)
 			child.queue_free()
 	
@@ -382,53 +411,55 @@ func _rebuild_hidden_edges_list() -> void:
 		return
 	
 	var hidden_index: int = 0
-	var visible_count: int = 0
 	
-	# Find all edges in the graph and categorize them
-	for node in location_graph.nodes:
-		var node_id := String(node.id)
-		for edge in runtime.get_edges_from(node_id):
-			var is_hidden: bool = "hidden" in edge and edge.hidden
-			var from_name := runtime.get_location_name(node_id)
-			var to_name := runtime.get_location_name(String(edge.to_id))
-			var label: String = edge.label if edge.label != "" else runtime.get_out_port_label(node_id, edge.from_port)
-			
-			# Create a container for the edge info and button
-			var hbox := HBoxContainer.new()
-			
-			var edge_label := Label.new()
-			var edge_text := "%s → %s" % [from_name, to_name]
-			if label != "":
-				edge_text += " (%s)" % label
-			edge_label.text = edge_text
-			edge_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			hbox.add_child(edge_label)
-			
-			if is_hidden:
-				# Add reveal button for hidden edges
-				hbox.name = "HiddenEdge_%d" % hidden_index
-				var reveal_button := Button.new()
-				reveal_button.text = "Reveal"
-				reveal_button.pressed.connect(_create_unhide_callback(node_id, String(edge.to_id)))
-				hbox.add_child(reveal_button)
-				hidden_edges_vbox.add_child(hbox)
-				hidden_index += 1
-			else:
-				# Add hide button for visible edges
-				hbox.name = "VisibleEdge_%d" % visible_count
-				edge_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-				var hide_button := Button.new()
-				hide_button.text = "Hide"
-				hide_button.pressed.connect(_create_hide_callback(node_id, String(edge.to_id)))
-				hbox.add_child(hide_button)
-				hidden_edges_vbox.add_child(hbox)
-				visible_count += 1
+	# Only show edges that were initially hidden
+	for edge_pair in initially_hidden_edges:
+		var from_id: String = edge_pair[0]
+		var to_id: String = edge_pair[1]
+		
+		var edge := runtime.get_edge_between_including_locked(from_id, to_id)
+		if edge == null:
+			continue
+		
+		var is_hidden: bool = "hidden" in edge and edge.hidden
+		var from_name := runtime.get_location_name(from_id)
+		var to_name := runtime.get_location_name(to_id)
+		var label: String = edge.label if edge.label != "" else runtime.get_out_port_label(from_id, edge.from_port)
+		
+		# Create a container for the edge info and button
+		var hbox := HBoxContainer.new()
+		hbox.name = "HiddenEdge_%d" % hidden_index
+		
+		var edge_label := Label.new()
+		var edge_text := "%s → %s" % [from_name, to_name]
+		if label != "":
+			edge_text += " (%s)" % label
+		edge_label.text = edge_text
+		edge_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hbox.add_child(edge_label)
+		
+		if is_hidden:
+			# Add reveal button for hidden edges
+			var reveal_button := Button.new()
+			reveal_button.text = "Reveal"
+			reveal_button.pressed.connect(_create_unhide_callback(from_id, to_id))
+			hbox.add_child(reveal_button)
+		else:
+			# Show as revealed (grayed out with hide button)
+			edge_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+			var hide_button := Button.new()
+			hide_button.text = "Hide"
+			hide_button.pressed.connect(_create_hide_callback(from_id, to_id))
+			hbox.add_child(hide_button)
+		
+		hidden_edges_vbox.add_child(hbox)
+		hidden_index += 1
 	
-	# Show message if no edges at all
-	if hidden_index == 0 and visible_count == 0:
+	# Show message if no initially hidden edges
+	if initially_hidden_edges.size() == 0:
 		var no_edges_label := Label.new()
 		no_edges_label.name = "HiddenEdge_None"
-		no_edges_label.text = "No edges in graph"
+		no_edges_label.text = "No hidden edges in graph"
 		no_edges_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
 		hidden_edges_vbox.add_child(no_edges_label)
 
