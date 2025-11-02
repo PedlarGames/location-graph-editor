@@ -266,13 +266,14 @@ func _on_find_path_button_pressed() -> void:
 func _update_pathfinding_display() -> void:
 	route_list_label.text = ""
 	if location_graph == null:
-		route_list_label.text = "No graph loaded."
 		return
 	var from_id := path_from_location_input.text.strip_edges()
 	var to_id := path_to_location_input.text.strip_edges()
+	
+	# Only update if there's an active pathfinding query
 	if from_id == "" or to_id == "":
-		route_list_label.text = "Please enter both From and To location IDs."
 		return
+	
 	if _get_node_by_id(from_id) == null:
 		route_list_label.text = "From location ID not found: %s" % from_id
 		return
@@ -438,6 +439,8 @@ func _create_unlock_callback(from_id: String, to_id: String) -> Callable:
 		if runtime.unlock_edge(from_id, to_id):
 			print("Unlocked edge: %s → %s" % [from_id, to_id])
 			_update_ui()
+			# Delay pathfinding update to next frame to ensure UI is updated
+			await get_tree().process_frame
 			_update_pathfinding_display()
 
 
@@ -447,6 +450,8 @@ func _create_lock_callback(from_id: String, to_id: String) -> Callable:
 		if runtime.lock_edge(from_id, to_id):
 			print("Locked edge: %s → %s" % [from_id, to_id])
 			_update_ui()
+			# Delay pathfinding update to next frame to ensure UI is updated
+			await get_tree().process_frame
 			_update_pathfinding_display()
 
 
@@ -456,6 +461,8 @@ func _create_unhide_callback(from_id: String, to_id: String) -> Callable:
 		if runtime.unhide_edge(from_id, to_id):
 			print("Revealed edge: %s → %s" % [from_id, to_id])
 			_update_ui()
+			# Delay pathfinding update to next frame to ensure UI is updated
+			await get_tree().process_frame
 			_update_pathfinding_display()
 
 
@@ -465,4 +472,6 @@ func _create_hide_callback(from_id: String, to_id: String) -> Callable:
 		if runtime.hide_edge(from_id, to_id):
 			print("Hidden edge: %s → %s" % [from_id, to_id])
 			_update_ui()
+			# Delay pathfinding update to next frame to ensure UI is updated
+			await get_tree().process_frame
 			_update_pathfinding_display()

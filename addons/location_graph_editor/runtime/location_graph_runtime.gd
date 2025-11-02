@@ -205,6 +205,7 @@ func hide_edge(from_id: String, to_id: String) -> bool:
 	else:
 		edge.set("hidden", true)
 	
+	_build_internal_indices()  # Rebuild indices to update neighbors list
 	return true
 
 
@@ -221,6 +222,7 @@ func unhide_edge(from_id: String, to_id: String) -> bool:
 		return true  # Already unhidden
 	
 	edge.hidden = false
+	_build_internal_indices()  # Rebuild indices to update neighbors list
 	return true
 
 
