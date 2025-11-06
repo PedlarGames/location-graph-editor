@@ -24,15 +24,13 @@ A handy Godot 4 plugin for creating, managing, and utilizing node-based location
 
 ### Smart Connection System
 
-- **Bidirectional Connections**: Toggle connections as two-way or one-way
-- **Visual Feedback**:
-  - Green lines/ports = Bidirectional connections
-  - Amber lines/ports = One-way connections
-  - Red ports = Locked connections
-  - Blue ports = Hidden connections
-  - Purple ports = Locked + Hidden
-- **Connection Rules**: Each port can only have one connection, preventing conflicts
-- **Context Menu**: Right-click connections to lock/unlock/hide them
+- **Bidirectional Connections**: Right click a connection to set properties such as bidirectionality, locking, and visibility. The editor provides clear visual feedback:
+  - 🟢 **Green Lines & Ports**: Indicate a bidirectional connection.
+  - 🟠 **Amber Lines & Ports**: Indicate a one-way connection.
+- **Locked and Hidden Connections**: Right-click on connection lines to lock/unlock/hide them. Locked and/or hidden connections provide visual and gameplay restrictions:
+  - 🔴 **Red Ports**: Indicate locked connections in the editor.
+  - 🔵 **Blue Ports**: Indicate hidden connections in the editor.
+  - 🟣 **Purple Ports**: Indicate connections that are both locked and hidden.
 
 ### Runtime Features
 

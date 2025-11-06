@@ -40,17 +40,17 @@ var runtime := LocationGraphRuntime.new()
 var current_location: String = ""
 
 func _ready() -> void:
-	# Load your graph
-	runtime.load_graph("res://maps/my_map.tres")
-	
-	# Start at the designated start location
-	current_location = runtime.get_start_id()
-	
-	# Get available exits
-	var neighbors := runtime.get_neighbors(current_location)
-	for neighbor_id in neighbors:
-		var label := runtime.get_port_label_between(current_location, neighbor_id)
-		print("Exit: %s -> %s" % [label, runtime.get_location_name(neighbor_id)])
+    # Load your graph
+    runtime.load_graph("res://maps/my_map.tres")
+    
+    # Start at the designated start location
+    current_location = runtime.get_start_id()
+    
+    # Get available exits
+    var neighbors := runtime.get_neighbors(current_location)
+    for neighbor_id in neighbors:
+        var label := runtime.get_port_label_between(current_location, neighbor_id)
+        print("Exit: %s -> %s" % [label, runtime.get_location_name(neighbor_id)])
 ```
 
 ## Documentation
@@ -61,6 +61,7 @@ func _ready() -> void:
 ## Visual Indicators
 
 ### Connection Colors
+
 - **Green** lines/ports = Bidirectional connections
 - **Amber** lines/ports = One-way connections
 - **Red** ports = Locked connections
@@ -68,7 +69,9 @@ func _ready() -> void:
 - **Purple** ports = Both locked and hidden
 
 ### Connection Context Menu
+
 Right-click on connection lines to:
+
 - Toggle bidirectional
 - Lock/unlock (prevents travel at runtime)
 - Hide/unhide (marks as secret/discoverable)
@@ -76,19 +79,21 @@ Right-click on connection lines to:
 ## Runtime Features
 
 ### Core Navigation
+
 ```gdscript
 # Get accessible neighbors
 var neighbors := runtime.get_neighbors(location_id)
 
 # Check for direct connection
 if runtime.has_edge(from_id, to_id):
-	# Move player
+    # Move player
 
 # Find shortest path
 var path := runtime.find_path_bfs(start_id, goal_id)
 ```
 
 ### Dynamic Edge Management
+
 ```gdscript
 # Use instanced graph for runtime modifications
 runtime.load_graph_instanced("res://maps/dungeon.tres")
@@ -98,17 +103,18 @@ runtime.lock_edge("entrance", "treasure_room")
 
 # Unlock when player has key
 if player_has_key:
-	runtime.unlock_edge("entrance", "treasure_room")
+    runtime.unlock_edge("entrance", "treasure_room")
 
 # Hide secret passages
 runtime.hide_edge("library", "secret_room")
 
 # Reveal when discovered
 if player_examined_bookshelf:
-	runtime.unhide_edge("library", "secret_room")
+    runtime.unhide_edge("library", "secret_room")
 ```
 
 ### Performance
+
 - **Neighbor queries**: O(1) average
 - **Node/edge lookups**: O(1) average  
 - **Pathfinding**: O(V + E) using BFS
@@ -117,17 +123,22 @@ if player_examined_bookshelf:
 ## Resource Types
 
 ### LocationGraph
+
 Container for the entire graph with nodes and edges arrays.
 
 ### LocationNodeData
+
 Individual location/room with:
+
 - `id` - Unique identifier
 - `title` - Display name
 - `tags` - Custom categorization
 - `out_port_labels` / `in_port_labels` - Connection labels
 
 ### LocationEdgeData
+
 Connection between nodes with:
+
 - `from_id` / `to_id` - Connected node IDs
 - `bidirectional` - Two-way travel flag
 - `locked` - Accessibility state
@@ -156,5 +167,3 @@ MIT License - See LICENSE file for details.
 Copyright (c) 2025 Pedlar Games
 
 ---
-
-**Made with ❤️ for Godot 4.5+**
