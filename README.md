@@ -35,7 +35,9 @@ A handy Godot 4 plugin for creating, managing, and utilizing node-based location
 ### Runtime Features
 
 - **Optimized Performance**: Indexed lookups for O(1) neighbor queries
-- **BFS Pathfinding**: Built-in shortest path algorithm
+- **BFS Pathfinding**: Built-in shortest path algorithm (by hop count)
+- **Weighted Pathfinding**: Dijkstra's algorithm for lowest-cost routes (by travel time/cost)
+- **Connection Weights**: Assign travel times or costs to connections
 - **Dynamic Edge Management**: Lock/unlock/hide edges at runtime (doors, passages, etc.)
 - **Save/Load**: Store graphs as `.tres` resource files
 - **Instance Support**: Modify graphs at runtime without affecting original resources
@@ -126,12 +128,18 @@ if player_found_secret:
 ### 4. Pathfinding
 
 ```gdscript
-# Find shortest path between two locations
+# Find shortest path by hop count (ignores weights)
 var path := runtime.find_path_bfs(current_location, "boss_room")
 if path.is_empty():
     print("No path available!")
 else:
     print("Route: %s" % " → ".join(path))
+
+# Find optimal path by travel cost/time (uses weights)
+var result := runtime.find_path_weighted_with_cost(current_location, "boss_room")
+if not result.path.is_empty():
+    print("Route: %s" % " → ".join(result.path))
+    print("Total travel time: %s hours" % result.cost)
 ```
 
 ## Documentation
@@ -167,7 +175,9 @@ Lock/unlock doors, collapse passages, or reveal secrets based on game events.
 
 - `get_neighbors(id)` - Get accessible locations from current position
 - `has_edge(from_id, to_id)` - Check if direct connection exists
-- `find_path_bfs(start, goal)` - Find shortest path between locations
+- `find_path_bfs(start, goal)` - Find shortest path by hop count
+- `find_path_weighted(start, goal)` - Find lowest-cost path using weights
+- `find_path_weighted_with_cost(start, goal)` - Returns path and total cost
 
 ### Edge Management
 
@@ -175,6 +185,8 @@ Lock/unlock doors, collapse passages, or reveal secrets based on game events.
 - `unlock_edge(from_id, to_id)` - Unlock a connection
 - `hide_edge(from_id, to_id)` - Hide a connection
 - `unhide_edge(from_id, to_id)` - Reveal a hidden connection
+- `set_edge_weight(from_id, to_id, weight)` - Set travel cost/time
+- `get_edge_weight(from_id, to_id)` - Get connection weight
 
 ### Data Access
 
@@ -190,7 +202,8 @@ The runtime uses optimized indexed lookups:
 
 - **Neighbor queries**: O(1) average
 - **Node/edge lookups**: O(1) average
-- **Pathfinding**: O(V + E) using BFS
+- **BFS Pathfinding**: O(V + E) - finds shortest by hop count
+- **Weighted Pathfinding**: O((V + E) log V) - finds lowest cost path
 
 Suitable for graphs with 1000+ nodes.
 
@@ -233,6 +246,7 @@ Connection between two nodes:
 - `bidirectional` - Two-way travel flag
 - `locked` - Accessibility flag
 - `hidden` - Visibility flag
+- `weight` - Travel cost/time (default: 1.0)
 - `condition` - Custom condition string (for your game logic)
 
 ## Contributing
@@ -255,7 +269,15 @@ Created for the Godot game development community.
 
 ## Changelog
 
-### Version 1.0 (October 2025)
+### Version 1.1.0 (January 2026)
+
+- **Connection Weights**: Assign travel times or costs to connections
+- **Weighted Pathfinding**: Dijkstra's algorithm for finding lowest-cost routes
+- **New Runtime API**: `find_path_weighted()`, `find_path_weighted_with_cost()`, `get_edge_weight()`, `set_edge_weight()`, `calculate_path_weight()`
+- **Updated Example Scene**: Now demonstrates weighted pathfinding with cost display
+- **Context Menu**: Right-click connections to set weight values
+
+### Version 1.0.0 (October 2025)
 
 - Initial release
 - Visual graph editor
