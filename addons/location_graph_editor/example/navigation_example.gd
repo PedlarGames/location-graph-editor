@@ -273,13 +273,24 @@ func _update_pathfinding_display() -> void:
 	if runtime.get_location_node(to_id) == null:
 		route_list_label.text = "To location ID not found: %s" % to_id
 		return
-	# Use bfs from location_graph_runtime.gd to find the path.
-	var path: Array[String] = runtime.find_path_bfs(from_id, to_id) as Array[String]
+	
+	# Use weighted pathfinding to find the optimal path
+	var result: Dictionary = runtime.find_path_weighted_with_cost(from_id, to_id)
+	var path: Array = result.path
+	var total_cost: float = result.cost
+	
 	if path.size() == 0:
 		route_list_label.text = "No path found from %s to %s. (Check for locked/hidden edges)" % [from_id, to_id]
 		return
-	# Display the found path.
-	route_list_label.text = "Path: " + " -> ".join(path)
+	
+	# Display the found path with cost
+	var cost_display: String
+	if is_equal_approx(total_cost, round(total_cost)):
+		cost_display = "%d" % int(round(total_cost))
+	else:
+		cost_display = "%.2f" % total_cost
+	
+	route_list_label.text = "Path: " + " -> ".join(path) + "\nTotal cost: " + cost_display
 	route_list_label.show()
 
 

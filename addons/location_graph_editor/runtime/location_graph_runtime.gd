@@ -252,7 +252,56 @@ func has_edge(from_id: String, to_id: String) -> bool:
 	return to_id in get_neighbors(from_id)
 
 
+# Returns the weight of an edge between two nodes.
+# Returns 1.0 (default weight) if no edge is found or weight is not set.
+func get_edge_weight(from_id: String, to_id: String) -> float:
+	var edge := get_edge_between(from_id, to_id)
+	if edge == null:
+		return 1.0
+	if "weight" in edge:
+		# Snap to 2 decimal places to avoid floating point display issues
+		return snappedf(edge.weight, 0.01)
+	return 1.0
+
+
+# Returns the weight of an edge between two nodes, including locked edges.
+func get_edge_weight_including_locked(from_id: String, to_id: String) -> float:
+	var edge := get_edge_between_including_locked(from_id, to_id)
+	if edge == null:
+		return 1.0
+	if "weight" in edge:
+		# Snap to 2 decimal places to avoid floating point display issues
+		return snappedf(edge.weight, 0.01)
+	return 1.0
+
+
+# Sets the weight of an edge between two nodes.
+# Returns true if the edge was found and weight was set, false otherwise.
+# NOTE: This modifies the graph, so use an instanced graph for runtime changes.
+func set_edge_weight(from_id: String, to_id: String, weight: float) -> bool:
+	var edge := get_edge_between_including_locked(from_id, to_id)
+	if edge == null:
+		push_warning("Cannot set edge weight: No edge found between %s and %s" % [from_id, to_id])
+		return false
+	edge.weight = weight
+	return true
+
+
+# Calculates the total weight (cost/time) of a path.
+# Returns the sum of all edge weights along the path.
+func calculate_path_weight(path: Array[String]) -> float:
+	if path.size() < 2:
+		return 0.0
+	
+	var total_weight := 0.0
+	for i in range(path.size() - 1):
+		total_weight += get_edge_weight(path[i], path[i + 1])
+	# Snap to 2 decimal places to avoid accumulated floating point errors
+	return snappedf(total_weight, 0.01)
+
+
 # Finds the shortest path between two locations using a Breadth-First Search (BFS) algorithm.
+# This finds the path with fewest hops, ignoring edge weights.
 # Returns an array of location IDs representing the path, or an empty array if no path is found.
 func find_path_bfs(start_id: String, goal_id: String) -> Array[String]:
 	if not (nodes.has(start_id) and nodes.has(goal_id)):
@@ -277,6 +326,67 @@ func find_path_bfs(start_id: String, goal_id: String) -> Array[String]:
 	
 	# Return an empty array if the goal was not reached.
 	return []
+
+
+# Finds the lowest-cost path between two locations using Dijkstra's algorithm.
+# This considers edge weights for travel time/cost calculations.
+# Returns an array of location IDs representing the path, or an empty array if no path is found.
+func find_path_weighted(start_id: String, goal_id: String) -> Array[String]:
+	if not (nodes.has(start_id) and nodes.has(goal_id)):
+		push_warning("Pathfinding failed: Start or goal ID not found in the graph.")
+		return []
+
+	if start_id == goal_id:
+		return [start_id]
+
+	# Priority queue: Array of [cost, node_id] pairs, sorted by cost
+	var open_set: Array = [[0.0, start_id]]
+	var came_from: Dictionary = {}
+	var cost_so_far: Dictionary = {start_id: 0.0}
+
+	while not open_set.is_empty():
+		# Find and remove the node with lowest cost (simple linear search)
+		var min_index := 0
+		for i in range(1, open_set.size()):
+			if open_set[i][0] < open_set[min_index][0]:
+				min_index = i
+		var current_entry: Array = open_set[min_index]
+		open_set.remove_at(min_index)
+		
+		var current_cost: float = current_entry[0]
+		var current_id: String = current_entry[1]
+
+		# Skip if we've found a better path already
+		if cost_so_far.has(current_id) and current_cost > cost_so_far[current_id]:
+			continue
+
+		# Check if we reached the goal
+		if current_id == goal_id:
+			return _reconstruct_path(came_from, goal_id)
+
+		# Explore neighbors
+		for neighbor_id in get_neighbors(current_id):
+			var edge_weight := get_edge_weight(current_id, neighbor_id)
+			var new_cost: float = cost_so_far[current_id] + edge_weight
+
+			if not cost_so_far.has(neighbor_id) or new_cost < cost_so_far[neighbor_id]:
+				cost_so_far[neighbor_id] = new_cost
+				came_from[neighbor_id] = current_id
+				open_set.append([new_cost, neighbor_id])
+
+	# Return an empty array if the goal was not reached.
+	return []
+
+
+# Finds the lowest-cost path and returns both the path and the total cost.
+# Returns a dictionary with "path" (Array[String]) and "cost" (float).
+# If no path is found, returns {"path": [], "cost": INF}.
+func find_path_weighted_with_cost(start_id: String, goal_id: String) -> Dictionary:
+	var path := find_path_weighted(start_id, goal_id)
+	if path.is_empty():
+		return {"path": path, "cost": INF}
+	return {"path": path, "cost": calculate_path_weight(path)}
+
 
 # Given a node id and a connected neighbor id, return the in or out port label that connects them.
 func get_port_label_between(node_id: String, neighbor_id: String, include_locked: bool = false, include_hidden: bool = false) -> String:

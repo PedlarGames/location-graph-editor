@@ -696,6 +696,96 @@ else:
 
 ---
 
+### Weighted Pathfinding
+
+#### `find_path_weighted(start_id: String, goal_id: String) -> Array[String]`
+
+Finds the lowest-cost path between two locations using Dijkstra's algorithm. Considers edge weights for travel time/cost calculations.
+
+**Parameters:**
+
+- `start_id`: Starting location ID
+- `goal_id`: Destination location ID
+
+**Returns:**
+
+- Array of location IDs representing the lowest-cost path, or empty array if no path found
+
+**Example:**
+
+```gdscript
+# Find the fastest route considering travel times
+var path := runtime.find_path_weighted(current_location, "destination")
+if not path.is_empty():
+    var total_time := runtime.calculate_path_weight(path)
+    print("Fastest route takes %.1f hours" % total_time)
+```
+
+---
+
+#### `find_path_weighted_with_cost(start_id: String, goal_id: String) -> Dictionary`
+
+Finds the lowest-cost path and returns both the path and total cost.
+
+**Returns:**
+
+- Dictionary with `"path"` (Array[String]) and `"cost"` (float). If no path found, returns `{"path": [], "cost": INF}`
+
+**Example:**
+
+```gdscript
+var result := runtime.find_path_weighted_with_cost("start_city", "end_city")
+if not result.path.is_empty():
+    print("Route: %s" % result.path)
+    print("Total travel cost: %.1f gold" % result.cost)
+```
+
+---
+
+### Edge Weights
+
+#### `get_edge_weight(from_id: String, to_id: String) -> float`
+
+Returns the weight of an accessible edge between two nodes. Returns 1.0 if no edge found or weight not set.
+
+**Example:**
+
+```gdscript
+var travel_time := runtime.get_edge_weight("town_a", "town_b")
+print("Travel time: %.1f hours" % travel_time)
+```
+
+---
+
+#### `set_edge_weight(from_id: String, to_id: String, weight: float) -> bool`
+
+Sets the weight of an edge at runtime. Returns true if successful.
+
+**Note:** This modifies the graph, so use an instanced graph for runtime changes.
+
+**Example:**
+
+```gdscript
+# Make a road slower due to bad weather
+runtime.set_edge_weight("town_a", "town_b", 5.0)  # Was 2.0, now takes longer
+```
+
+---
+
+#### `calculate_path_weight(path: Array[String]) -> float`
+
+Calculates the total weight (cost/time) of a path by summing all edge weights.
+
+**Example:**
+
+```gdscript
+var path := runtime.find_path_bfs(start, goal)  # Find any path
+var total_cost := runtime.calculate_path_weight(path)
+print("This route will cost %.1f gold" % total_cost)
+```
+
+---
+
 ## Common Use Cases
 
 ### 1. Text Adventure Navigation
@@ -792,9 +882,15 @@ func fast_travel(destination_id: String) -> void:
         print("Cannot fast travel to that location")
         return
     
-    var path := runtime.find_path_bfs(current_location, destination_id)
-    print("Fast traveling via: %s" % " -> ".join(path))
+    # Use weighted pathfinding to find the optimal route
+    var result := runtime.find_path_weighted_with_cost(current_location, destination_id)
+    print("Fast traveling via: %s" % " -> ".join(result.path))
+    print("Travel time: %.1f hours" % result.cost)
     current_location = destination_id
+
+func get_travel_time_to(destination_id: String) -> float:
+    var result := runtime.find_path_weighted_with_cost(current_location, destination_id)
+    return result.cost
 
 func show_fast_travel_menu() -> void:
     print("\n=== Fast Travel ===")
@@ -803,7 +899,8 @@ func show_fast_travel_menu() -> void:
             continue
         var name := runtime.get_location_name(location_id)
         if can_fast_travel_to(location_id):
-            print("  [%s] %s" % [location_id, name])
+            var travel_time := get_travel_time_to(location_id)
+            print("  [%s] %s (%.1f hours)" % [location_id, name, travel_time])
         else:
             print("  [BLOCKED] %s" % name)
 ```
@@ -1204,10 +1301,14 @@ The runtime uses indexed lookups for fast performance:
 
 - `get_neighbors()`: O(1) average lookup
 - `get_location_node()`: O(1) average lookup
-- `find_path_bfs()`: O(V + E) where V=nodes, E=edges
+- `get_edge_weight()`: O(number of edges from node) - typically small
+- `find_path_bfs()`: O(V + E) where V=nodes, E=edges (finds shortest hop count)
+- `find_path_weighted()`: O((V + E) log V) using Dijkstra's algorithm (finds lowest cost)
 
 **Tips:**
 
+- Use `find_path_bfs()` when all edges have equal weight (faster)
+- Use `find_path_weighted()` when edges have different travel times/costs
 - Avoid calling `load_graph()` repeatedly
 - Cache neighbor lists if checking multiple times per frame
 - Use `has_edge()` for simple connectivity checks before pathfinding

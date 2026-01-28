@@ -11,3 +11,4 @@ class_name LocationEdgeData
 @export var bidirectional: bool = false
 @export var locked: bool = false
 @export var hidden: bool = false
+@export var weight: float = 1.0

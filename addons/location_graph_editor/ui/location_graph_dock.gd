@@ -56,6 +56,12 @@ var _locked_connections: Dictionary = {}
 # The key is a string formatted as "from_node|from_port|to_node|to_port".
 var _hidden_connections: Dictionary = {}
 
+# --- Weight Connection Management ---
+# A dictionary to store the weight of connections.
+# The key is a string formatted as "from_node|from_port|to_node|to_port".
+# Default weight is 1.0 if not present.
+var _connection_weights: Dictionary = {}
+
 ## Generates a unique string key for an edge to store its bidirectional state.
 func _get_edge_key(from_node_id: String, from_port_index: int, to_node_id: String, to_port_index: int) -> String:
 	return "%s|%d|%s|%d" % [from_node_id, from_port_index, to_node_id, to_port_index]
@@ -102,6 +108,24 @@ func _set_connection_hidden(from_node_id: String, from_port_index: int, to_node_
 		if _hidden_connections.has(edge_key):
 			_hidden_connections.erase(edge_key)
 
+## Gets the weight for a given connection. Returns 1.0 if not set.
+func _get_connection_weight(from_node_id: String, from_port_index: int, to_node_id: String, to_port_index: int) -> float:
+	var edge_key := _get_edge_key(from_node_id, from_port_index, to_node_id, to_port_index)
+	if _connection_weights.has(edge_key):
+		# Snap to 2 decimal places to avoid floating point display issues
+		return snappedf(float(_connection_weights[edge_key]), 0.01)
+	return 1.0
+
+## Sets the weight for a given connection.
+func _set_connection_weight(from_node_id: String, from_port_index: int, to_node_id: String, to_port_index: int, weight: float) -> void:
+	var edge_key := _get_edge_key(from_node_id, from_port_index, to_node_id, to_port_index)
+	if is_equal_approx(weight, 1.0):
+		# Remove from dictionary if weight is default
+		if _connection_weights.has(edge_key):
+			_connection_weights.erase(edge_key)
+	else:
+		_connection_weights[edge_key] = weight
+
 ## Removes all bidirectional flags for connections associated with a given node ID.
 ## This is called when a node is deleted.
 func _purge_bidirectional_flags_for_node(node_id: String) -> void:
@@ -134,6 +158,17 @@ func _purge_hidden_flags_for_node(node_id: String) -> void:
 			keys_to_remove.append(String(connection_key))
 	for key_to_remove in keys_to_remove:
 		_hidden_connections.erase(key_to_remove)
+
+## Removes all weight values for connections associated with a given node ID.
+## This is called when a node is deleted.
+func _purge_weight_flags_for_node(node_id: String) -> void:
+	var keys_to_remove: Array[String] = []
+	for connection_key in _connection_weights.keys():
+		var parts: Array = String(connection_key).split("|")
+		if parts.size() == 4 and (parts[0] == node_id or parts[2] == node_id):
+			keys_to_remove.append(String(connection_key))
+	for key_to_remove in keys_to_remove:
+		_connection_weights.erase(key_to_remove)
 
 ## Remaps bidirectional connection keys when a node's ID changes.
 func _remap_bidirectional_node_id(old_id: String, new_id: String) -> void:
@@ -174,6 +209,26 @@ func _remap_locked_node_id(old_id: String, new_id: String) -> void:
 			var new_key := "%s|%s|%s|%s" % [from_node, from_port, to_node, to_port]
 			remapped_connections[new_key] = true
 	_locked_connections = remapped_connections
+
+## Remaps weight connection keys when a node's ID changes.
+func _remap_weight_node_id(old_id: String, new_id: String) -> void:
+	if old_id == new_id:
+		return
+	var remapped_weights: Dictionary = {}
+	for connection_key in _connection_weights.keys():
+		var parts: PackedStringArray = String(connection_key).split("|")
+		if parts.size() == 4:
+			var from_node: String = parts[0]
+			var from_port: String = parts[1]
+			var to_node: String = parts[2]
+			var to_port: String = parts[3]
+			if from_node == old_id:
+				from_node = new_id
+			if to_node == old_id:
+				to_node = new_id
+			var new_key := "%s|%s|%s|%s" % [from_node, from_port, to_node, to_port]
+			remapped_weights[new_key] = _connection_weights[connection_key]
+	_connection_weights = remapped_weights
 
 # --- Port Label Helpers ---
 
@@ -744,6 +799,9 @@ func _clear_graph_canvas() -> void:
 	
 	node_id_counter = 1
 	_bidirectional_connections.clear()
+	_locked_connections.clear()
+	_hidden_connections.clear()
+	_connection_weights.clear()
 	selected_node_ids.clear()
 	is_graph_dirty = false
 	_update_dirty_label()
@@ -819,6 +877,7 @@ func _build_resource_from_graph() -> LocationGraph:
 		edge_data.bidirectional = _is_connection_bidirectional(String(connection.from_node), int(connection.from_port), String(connection.to_node), int(connection.to_port))
 		edge_data.locked = _is_connection_locked(String(connection.from_node), int(connection.from_port), String(connection.to_node), int(connection.to_port))
 		edge_data.hidden = _is_connection_hidden(String(connection.from_node), int(connection.from_port), String(connection.to_node), int(connection.to_port))
+		edge_data.weight = _get_connection_weight(String(connection.from_node), int(connection.from_port), String(connection.to_node), int(connection.to_port))
 		resource.edges.append(edge_data)
 		
 	return resource
@@ -1160,12 +1219,22 @@ func _show_connection_context_menu(connection: Dictionary, global_position: Vect
 	
 	var is_locked := _is_connection_locked(from_node_id, from_port, to_node_id, to_port)
 	var is_hidden := _is_connection_hidden(from_node_id, from_port, to_node_id, to_port)
+	var current_weight := _get_connection_weight(from_node_id, from_port, to_node_id, to_port)
+	
+	# Format weight display - show integer if whole number, otherwise 2 decimal places
+	var weight_display: String
+	if is_equal_approx(current_weight, round(current_weight)):
+		weight_display = "%d" % int(round(current_weight))
+	else:
+		weight_display = "%.2f" % current_weight
 	
 	var menu := PopupMenu.new()
 	menu.add_check_item("Lock Connection", 0)
 	menu.set_item_checked(0, is_locked)
 	menu.add_check_item("Hide Connection", 1)
 	menu.set_item_checked(1, is_hidden)
+	menu.add_separator()
+	menu.add_item("Set Weight... (%s)" % weight_display, 2)
 	
 	menu.connect("id_pressed", func(id):
 		if id == 0:
@@ -1178,11 +1247,59 @@ func _show_connection_context_menu(connection: Dictionary, global_position: Vect
 			_set_connection_hidden(from_node_id, from_port, to_node_id, to_port, not is_hidden)
 			_mark_graph_as_dirty()
 			_refresh_all_connection_activity()
+		elif id == 2:
+			# Open weight edit dialog
+			_open_weight_edit_dialog(from_node_id, from_port, to_node_id, to_port, current_weight)
 		menu.queue_free()
 	)
 	
 	add_child(menu)
 	menu.popup(Rect2(global_position, Vector2.ZERO))
+
+
+## Opens a dialog to edit the weight of a connection.
+func _open_weight_edit_dialog(from_node_id: String, from_port: int, to_node_id: String, to_port: int, current_weight: float) -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = "Set Connection Weight"
+	dialog.min_size = Vector2(300, 0)
+	
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+	
+	var label := Label.new()
+	label.text = "Weight (travel time/cost):"
+	vbox.add_child(label)
+	
+	var spin_box := SpinBox.new()
+	spin_box.min_value = 0.0
+	spin_box.max_value = 9999.0
+	spin_box.step = 0.01
+	spin_box.value = current_weight
+	spin_box.allow_greater = true
+	spin_box.select_all_on_focus = true
+	vbox.add_child(spin_box)
+	
+	var hint_label := Label.new()
+	hint_label.text = "Default weight is 1.0"
+	hint_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	vbox.add_child(hint_label)
+	
+	dialog.add_child(vbox)
+	
+	dialog.connect("confirmed", func():
+		# Round to 2 decimal places to avoid floating point precision issues
+		var new_weight := snappedf(spin_box.value, 0.01)
+		_set_connection_weight(from_node_id, from_port, to_node_id, to_port, new_weight)
+		_mark_graph_as_dirty()
+		dialog.queue_free()
+	)
+	
+	dialog.connect("canceled", func():
+		dialog.queue_free()
+	)
+	
+	add_child(dialog)
+	dialog.popup_centered()
 
 # --- Save & Load ---
 
@@ -1242,6 +1359,8 @@ func _populate_graph_from_resource(resource: LocationGraph) -> void:
 				_set_connection_locked(String(edge_data.from_id), int(edge_data.from_port), String(edge_data.to_id), int(edge_data.to_port), true)
 			if "hidden" in edge_data and edge_data.hidden:
 				_set_connection_hidden(String(edge_data.from_id), int(edge_data.from_port), String(edge_data.to_id), int(edge_data.to_port), true)
+			if "weight" in edge_data and not is_equal_approx(edge_data.weight, 1.0):
+				_set_connection_weight(String(edge_data.from_id), int(edge_data.from_port), String(edge_data.to_id), int(edge_data.to_port), edge_data.weight)
 				
 	_refresh_all_connection_activity()
 	_refresh_all_port_colors()

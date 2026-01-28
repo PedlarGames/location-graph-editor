@@ -75,6 +75,7 @@ Right-click on connection lines to:
 - Toggle bidirectional
 - Lock/unlock (prevents travel at runtime)
 - Hide/unhide (marks as secret/discoverable)
+- Set weight (travel time/cost)
 
 ## Runtime Features
 
@@ -88,8 +89,28 @@ var neighbors := runtime.get_neighbors(location_id)
 if runtime.has_edge(from_id, to_id):
 	# Move player
 
-# Find shortest path
+# Find shortest path (fewest hops)
 var path := runtime.find_path_bfs(start_id, goal_id)
+
+# Find lowest-cost path (considering weights)
+var weighted_path := runtime.find_path_weighted(start_id, goal_id)
+
+# Get path with total cost
+var result := runtime.find_path_weighted_with_cost(start_id, goal_id)
+print("Path: %s, Total cost: %.1f" % [result.path, result.cost])
+```
+
+### Edge Weights
+
+```gdscript
+# Get weight of an edge (travel time/cost)
+var weight := runtime.get_edge_weight(from_id, to_id)
+
+# Set edge weight at runtime (requires instanced graph)
+runtime.set_edge_weight(from_id, to_id, 5.0)
+
+# Calculate total weight of a path
+var total_cost := runtime.calculate_path_weight(path)
 ```
 
 ### Dynamic Edge Management
@@ -117,7 +138,7 @@ if player_examined_bookshelf:
 
 - **Neighbor queries**: O(1) average
 - **Node/edge lookups**: O(1) average  
-- **Pathfinding**: O(V + E) using BFS
+- **Pathfinding**: O(V + E) using BFS, O((V + E) log V) using Dijkstra's weighted pathfinding
 - Suitable for graphs with 1000+ nodes
 
 ## Resource Types
@@ -143,6 +164,7 @@ Connection between nodes with:
 - `bidirectional` - Two-way travel flag
 - `locked` - Accessibility state
 - `hidden` - Visibility state
+- `weight` - Travel cost/time (default: 1.0)
 - `label` - Connection description
 - `condition` - Custom condition string
 

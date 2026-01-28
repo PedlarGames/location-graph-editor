@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="LocationGraph" load_steps=24 format=3 uid="uid://dibe3y7tv834f"]
+[gd_resource type="Resource" script_class="LocationGraph" format=3 uid="uid://dibe3y7tv834f"]
 
 [ext_resource type="Script" uid="uid://cq3njx1yv4hmw" path="res://addons/location_graph_editor/resources/location_edge.gd" id="1_hawok"]
 [ext_resource type="Script" uid="uid://dc3tv4abtdhe7" path="res://addons/location_graph_editor/resources/location_node.gd" id="2_rkvbm"]
@@ -20,6 +20,7 @@ script = ExtResource("1_hawok")
 from_id = &"village_well_bottom"
 to_id = &"village_sewer"
 bidirectional = true
+weight = 1.25
 
 [sub_resource type="Resource" id="Resource_y4xal"]
 script = ExtResource("1_hawok")
@@ -27,6 +28,7 @@ from_id = &"village_square"
 to_id = &"village_tavern"
 from_port = 1
 bidirectional = true
+weight = 2.5
 
 [sub_resource type="Resource" id="Resource_67hcq"]
 script = ExtResource("1_hawok")
@@ -41,6 +43,7 @@ from_id = &"village_square"
 to_id = &"village_dock"
 from_port = 2
 bidirectional = true
+weight = 3.0
 
 [sub_resource type="Resource" id="Resource_snysd"]
 script = ExtResource("1_hawok")
@@ -48,6 +51,7 @@ from_id = &"village_dock"
 to_id = &"village_river"
 to_port = 1
 bidirectional = true
+weight = 10.01
 
 [sub_resource type="Resource" id="Resource_yfp56"]
 script = ExtResource("1_hawok")
@@ -75,7 +79,7 @@ hidden = true
 script = ExtResource("2_rkvbm")
 id = &"village_sewer"
 title = "Sewer"
-position = Vector2(1379.9257, 193.52069)
+position = Vector2(1516.4961, 126.66945)
 size = Vector2(428, 127)
 out_port_labels = Array[String](["Push Loose Brick", "To the River"])
 in_port_labels = Array[String](["To the Well", ""])
@@ -84,7 +88,7 @@ in_port_labels = Array[String](["To the Well", ""])
 script = ExtResource("2_rkvbm")
 id = &"village_well_bottom"
 title = "Well Bottom"
-position = Vector2(979.92566, 193.52069)
+position = Vector2(1116.4961, 126.66945)
 size = Vector2(351, 143)
 out_port_labels = Array[String](["Enter Sewer"])
 in_port_labels = Array[String](["Climb Well"])
@@ -93,7 +97,7 @@ in_port_labels = Array[String](["Climb Well"])
 script = ExtResource("2_rkvbm")
 id = &"village_tavern"
 title = "Tavern"
-position = Vector2(479.92566, 353.5207)
+position = Vector2(616.496, 286.66943)
 size = Vector2(381.41992, 147.57983)
 out_port_labels = Array[String](["To the Cellar"])
 in_port_labels = Array[String](["Leave Tavern"])
@@ -102,7 +106,7 @@ in_port_labels = Array[String](["Leave Tavern"])
 script = ExtResource("2_rkvbm")
 id = &"village_dock"
 title = "Dock"
-position = Vector2(479.92566, 593.5207)
+position = Vector2(616.496, 526.6695)
 size = Vector2(463.28003, 162.41989)
 out_port_labels = Array[String](["To the River"])
 in_port_labels = Array[String](["To Village Square"])
@@ -111,7 +115,7 @@ in_port_labels = Array[String](["To Village Square"])
 script = ExtResource("2_rkvbm")
 id = &"tavern_cellar_secret_room"
 title = "Secret Room"
-position = Vector2(1379.9257, 373.5207)
+position = Vector2(1516.4961, 306.66943)
 size = Vector2(518.93994, 146.36987)
 out_port_labels = Array[String]([""])
 in_port_labels = Array[String](["Leave the Secret Room"])
@@ -120,7 +124,7 @@ in_port_labels = Array[String](["Leave the Secret Room"])
 script = ExtResource("2_rkvbm")
 id = &"sewer_hidden_alcove"
 title = "Hidden Alcove"
-position = Vector2(1959.9257, 173.52069)
+position = Vector2(2096.496, 106.66945)
 size = Vector2(442.70996, 162.42004)
 out_port_labels = Array[String]([""])
 in_port_labels = Array[String](["Leave the Alcove"])
@@ -129,7 +133,7 @@ in_port_labels = Array[String](["Leave the Alcove"])
 script = ExtResource("2_rkvbm")
 id = &"village_tavern_cellar"
 title = "Cellar"
-position = Vector2(919.92566, 373.5207)
+position = Vector2(1056.4961, 306.66943)
 size = Vector2(423.56006, 116.37012)
 out_port_labels = Array[String](["To Secret Room"])
 in_port_labels = Array[String](["Leave the Cellar"])
@@ -138,7 +142,7 @@ in_port_labels = Array[String](["Leave the Cellar"])
 script = ExtResource("2_rkvbm")
 id = &"village_river"
 title = "River"
-position = Vector2(2039.9257, 433.5207)
+position = Vector2(2176.496, 366.66943)
 size = Vector2(423.12012, 141)
 out_port_labels = Array[String](["", ""])
 in_port_labels = Array[String](["Enter Sewer", "To the Dock"])
@@ -147,7 +151,7 @@ in_port_labels = Array[String](["Enter Sewer", "To the Dock"])
 script = ExtResource("2_rkvbm")
 id = &"village_well"
 title = "Well"
-position = Vector2(479.92566, 193.52069)
+position = Vector2(616.496, 126.66945)
 size = Vector2(439, 125)
 out_port_labels = Array[String](["Down the Well"])
 in_port_labels = Array[String](["To Village Square"])
@@ -156,7 +160,7 @@ in_port_labels = Array[String](["To Village Square"])
 script = ExtResource("2_rkvbm")
 id = &"village_square"
 title = "Village Square"
-position = Vector2(-40.07434, 313.5207)
+position = Vector2(96.49597, 246.66945)
 size = Vector2(425.47006, 153.94995)
 out_port_labels = Array[String](["To Well", "To the Tavern", "To Dock"])
 in_port_labels = Array[String](["", "", ""])
